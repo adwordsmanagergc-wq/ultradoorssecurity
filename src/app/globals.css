@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-white text-slate-800 antialiased;
+  }
+  /* Give sticky-header anchor jumps some breathing room. */
+  :target {
+    scroll-margin-top: 6rem;
+  }
+}
+
+@layer components {
+  .prose-trade {
+    @apply max-w-none text-slate-700;
+  }
+  .prose-trade p {
+    @apply mb-4 leading-relaxed;
+  }
+  .prose-trade h2 {
+    @apply mb-3 mt-8 text-2xl font-bold text-brand-900;
+  }
+  .prose-trade h3 {
+    @apply mb-2 mt-6 text-xl font-semibold text-brand-900;
+  }
+  .prose-trade ul {
+    @apply mb-4 space-y-2 pl-5;
+  }
+  .prose-trade li {
+    @apply list-disc marker:text-brand-400;
+  }
+}
