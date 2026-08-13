@@ -54,11 +54,7 @@ const hasSocial = Object.values(site.social).some(Boolean);
       <address class="mt-4 space-y-2.5 text-sm not-italic">
         <p>
           <a href={site.enquiriesPhone.href} class="font-semibold text-white hover:text-accent">{site.enquiriesPhone.display}</a>
-          <span class="block text-white/50">General enquiries</span>
-        </p>
-        <p>
-          <a href={site.emergencyPhone.href} class="font-semibold text-white hover:text-accent">{site.emergencyPhone.display}</a>
-          <span class="block text-white/50">24/7 emergency</span>
+          <span class="block text-white/50">Enquiries &amp; 24/7 emergency</span>
         </p>
         <p><a href={`mailto:${site.email}`} class="hover:text-white">{site.email}</a></p>
         <p>{site.location.town}, {site.location.region}</p>

@@ -9,12 +9,12 @@ export const site = {
   what: 'Bespoke security doors & industrial door specialists, protecting homes & businesses across the North West of England.',
   url: 'https://ultradoorssecurity.co.uk',
 
-  // Phones
+  // One contact number for everything (also the WhatsApp / 24-7 line).
   emergencyPhone: { display: '07570 335330', href: 'tel:+447570335330' },
-  enquiriesPhone: { display: '01204 244403', href: 'tel:+441204244403' },
+  enquiriesPhone: { display: '07570 335330', href: 'tel:+447570335330' },
 
-  // Single canonical email
-  email: 'info@ultradoorssecurity.co.uk',
+  // Single canonical email (enquiry form is delivered here too).
+  email: 'ukultradoors@gmail.com',
 
   // WhatsApp chat (same number as the 24/7 line). wa.me needs no + or spaces.
   whatsapp: {
@@ -64,9 +64,9 @@ export const site = {
     // Legal entity that appears on the bank line.
     legalName: 'ULTRADOORS NW Ltd',
     addressLines: ['Bolton', 'Greater Manchester'], // TODO: add full premises address
-    phone: '01204 244403',
-    emergencyPhone: '07570 335330',
-    email: 'info@ultradoorssecurity.co.uk',
+    // One contact number for everything (same as the site-wide line).
+    phone: '07570 335330',
+    email: 'ukultradoors@gmail.com',
     website: 'ultradoorssecurity.co.uk',
     // Real bank details from the current invoice.
     bank: {

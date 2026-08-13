@@ -5,12 +5,12 @@ Place all `.jpg` / `.png` files referenced in `src/data/portfolio.ts` and
 filenames.
 
 Until an image is added, the site shows a clean branded "Image coming soon"
-placeholder instead of a broken image — so you can deploy now and add photos
+placeholder instead of a broken image, so you can deploy now and add photos
 as they come in.
 
 ## Expected filenames
 
-**Logos** (optional — the header/footer use an inline SVG logo by default):
+**Logos** (optional, the header/footer use an inline SVG logo by default):
 - `ultradoors-logo-1.jpg`
 - `ultradoors-ud-logo-original.png`
 
@@ -29,5 +29,5 @@ as they come in.
 ## Tips for Lighthouse 95+
 - Export as optimised **WebP** or well-compressed **JPEG**.
 - Keep each image roughly ≤ 250 KB where possible.
-- The hero background reads from `ultradoors-security-gates.jpg` — use a strong,
+- The hero background reads from `ultradoors-security-gates.jpg`, use a strong,
   well-lit shot there.

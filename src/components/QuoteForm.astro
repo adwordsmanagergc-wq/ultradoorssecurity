@@ -10,35 +10,35 @@ interface Props {
 const { id = 'quote' } = Astro.props;
 const formName = 'quote';
 
-// Serverless form handler.
-//  • On VERCEL (or anywhere): set PUBLIC_FORMSPREE_ENDPOINT in your env to a
-//    Formspree form URL (https://formspree.io/f/xxxxxxxx). The form then posts
-//    straight to Formspree, works on a fully static site, no backend needed.
-//  • If it's NOT set, the form falls back to opening the visitor's email client
-//    so an enquiry is never silently lost.
-//  • The Netlify attributes below are harmless on Vercel and let the same form
-//    work if you ever host on Netlify instead.
+// Serverless form handler (no backend needed, works on a fully static site).
+//  • By default every enquiry is delivered straight to the business inbox
+//    (site.email) via FormSubmit. The very first submission triggers a one-off
+//    activation email from FormSubmit, click the link in it once to confirm the
+//    address and all future enquiries arrive automatically.
+//  • To use Formspree instead, set PUBLIC_FORMSPREE_ENDPOINT in your env to a
+//    Formspree form URL (https://formspree.io/f/xxxxxxxx) and it takes over.
+//  • If the network request ever fails, the form falls back to opening the
+//    visitor's own email client so an enquiry is never silently lost.
 const formspree = import.meta.env.PUBLIC_FORMSPREE_ENDPOINT || '';
-const action = formspree || '/thank-you';
+const formsubmit = `https://formsubmit.co/ajax/${site.email}`;
+const endpoint = formspree || formsubmit;
 const nextUrl = `${site.url}/thank-you`;
 ---
 <form
   id={`form-${id}`}
   name={formName}
   method="POST"
-  action={action}
-  data-netlify="true"
-  netlify-honeypot="_gotcha"
-  data-formspree={formspree}
+  action={endpoint}
   class="space-y-4"
 >
-  <!-- Handler wiring -->
-  <input type="hidden" name="form-name" value={formName} />
-  <input type="hidden" name="_next" value={nextUrl} />
+  <!-- Handler wiring (FormSubmit + Formspree both read these) -->
   <input type="hidden" name="_subject" value="New website enquiry, Ultra Doors Security" />
-  <!-- Honeypot (hidden from humans; _gotcha works for Formspree & Netlify) -->
+  <input type="hidden" name="_next" value={nextUrl} />
+  <input type="hidden" name="_template" value="table" />
+  <input type="hidden" name="_captcha" value="false" />
+  <!-- Honeypot (hidden from humans; _honey works for FormSubmit, ignored elsewhere) -->
   <p class="hidden" aria-hidden="true">
-    <label>Don't fill this out: <input name="_gotcha" tabindex="-1" autocomplete="off" /></label>
+    <label>Don't fill this out: <input name="_honey" tabindex="-1" autocomplete="off" /></label>
   </p>
 
   <div class="grid gap-4 sm:grid-cols-2">
@@ -103,7 +103,7 @@ const nextUrl = `${site.url}/thank-you`;
   }
 </style>
 
-<script is:inline define:vars={{ formId: `form-${id}`, formspree, email: site.email }}>
+<script is:inline define:vars={{ formId: `form-${id}`, endpoint, email: site.email }}>
   (function () {
     var form = document.getElementById(formId);
     if (!form) return;
@@ -117,41 +117,41 @@ const nextUrl = `${site.url}/thank-you`;
       success.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
+    // Last-resort fallback: open the visitor's own email client so the
+    // enquiry is never silently lost if the network request fails.
+    function mailtoFallback(fd) {
+      var lines = [];
+      fd.forEach(function (v, k) {
+        if (k[0] !== '_' && v) lines.push(k + ': ' + v);
+      });
+      window.location.href =
+        'mailto:' + email +
+        '?subject=' + encodeURIComponent('Website enquiry, Ultra Doors Security') +
+        '&body=' + encodeURIComponent(lines.join('\n'));
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       success.classList.add('hidden');
       error.classList.add('hidden');
-      if (form.querySelector('[name="_gotcha"]').value) return; // bot
+      if (form.querySelector('[name="_honey"]').value) return; // bot
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
 
       var fd = new FormData(form);
-
-      // No handler configured → fall back to the visitor's email client so
-      // the enquiry is never silently lost.
-      if (!formspree) {
-        var lines = [];
-        fd.forEach(function (v, k) {
-          if (k[0] !== '_' && k !== 'form-name' && v) lines.push(k + ': ' + v);
-        });
-        window.location.href =
-          'mailto:' + email +
-          '?subject=' + encodeURIComponent('Website enquiry, Ultra Doors Security') +
-          '&body=' + encodeURIComponent(lines.join('\n'));
-        return;
-      }
-
       var original = btn.textContent;
       btn.disabled = true;
       btn.textContent = 'Sending…';
-      fetch(formspree, { method: 'POST', headers: { Accept: 'application/json' }, body: fd })
+      fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json' }, body: fd })
         .then(function (res) {
           if (res.ok) showSuccess();
           else throw new Error('bad response');
         })
         .catch(function () {
+          // Network/handler failure → hand off to the email client instead.
+          mailtoFallback(fd);
           error.classList.remove('hidden');
         })
         .finally(function () {
