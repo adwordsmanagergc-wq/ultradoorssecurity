@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Gallery from '../components/Gallery.astro';
+import FloatingCallButton from '../components/FloatingCallButton.astro';
+import { site } from '../data/site';
+import { projects } from '../data/portfolio';
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site.url + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Portfolio', item: site.url + '/portfolio' },
+  ],
+};
+---
+<Base
+  title="Portfolio | Ultra Doors Security"
+  description="Browse completed security door, roller shutter, industrial door, shop front and security gate projects by Ultra Doors Security across the North West."
+  path="/portfolio"
+  jsonLd={[breadcrumb]}
+>
+  <Header />
+  <main id="main">
+    <!-- Page hero -->
+    <section class="bg-navy text-white">
+      <div class="container-x py-14 sm:py-16">
+        <nav aria-label="Breadcrumb" class="mb-4 text-sm text-white/60">
+          <a href="/" class="hover:text-white">Home</a>
+          <span aria-hidden="true" class="px-1">/</span>
+          <span class="text-white">Portfolio</span>
+        </nav>
+        <h1 class="text-4xl font-extrabold text-white sm:text-5xl">Our portfolio</h1>
+        <p class="mt-4 max-w-3xl text-lg text-white/80">
+          We are professionals throughout the whole supply chain and specialise
+          in the design, manufacturing and fitting of security doors and windows
+          — serving homes and businesses across the North West.
+        </p>
+      </div>
+    </section>
+
+    <section class="bg-cream py-14 sm:py-16">
+      <div class="container-x">
+        <Gallery projects={projects} id="portfolio-gallery" masonry={true} />
+      </div>
+    </section>
+  </main>
+  <Footer />
+  <FloatingCallButton />
+
+  <script is:inline>
+    // Deep-link: /portfolio#security-doors activates the matching filter.
+    (function () {
+      var map = {
+        'security-doors': 'Security Doors',
+        'roller-shutters': 'Roller Shutters',
+        'industrial-doors': 'Industrial Doors',
+        'shop-fronts-glazing': 'Shop Fronts',
+        'security-gates': 'Security Gates',
+        'emergency-repairs': 'All',
+      };
+      var hash = (location.hash || '').replace('#', '');
+      var cat = map[hash];
+      if (!cat) return;
+      var root = document.getElementById('portfolio-gallery');
+      if (!root) return;
+      var btn = root.querySelector('.filter-btn[data-filter="' + cat + '"]');
+      if (btn) {
+        btn.click();
+        root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    })();
+  </script>
+</Base>

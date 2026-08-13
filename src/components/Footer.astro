@@ -1,0 +1,84 @@
+---
+import Logo from './Logo.astro';
+import { site } from '../data/site';
+import { services } from '../data/services';
+
+const year = 2026;
+const quickLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Services', href: '/#services' },
+  { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Contact', href: '/contact' },
+];
+const hasSocial = Object.values(site.social).some(Boolean);
+---
+<footer class="bg-ink text-white/75">
+  <div class="container-x grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
+    <!-- Brand + blurb -->
+    <div>
+      <Logo variant="light" />
+      <p class="mt-4 max-w-xs text-sm leading-relaxed">
+        Bespoke security doors &amp; industrial door specialists, protecting
+        homes &amp; businesses across the North West of England.
+      </p>
+      <a href="/contact" class="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-hover">
+        Get a free quote
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <!-- Quick links -->
+    <nav aria-label="Quick links">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-white/50">Quick Links</h2>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {quickLinks.map((l) => (
+          <li><a href={l.href} class="hover:text-white">{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- Services -->
+    <nav aria-label="Services">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-white/50">Services</h2>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {services.map((s) => (
+          <li><a href={`/portfolio#${s.slug}`} class="hover:text-white">{s.title}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- Contact / NAP -->
+    <div>
+      <h2 class="text-sm font-bold uppercase tracking-wider text-white/50">Contact</h2>
+      <address class="mt-4 space-y-2.5 text-sm not-italic">
+        <p>
+          <a href={site.enquiriesPhone.href} class="font-semibold text-white hover:text-accent">{site.enquiriesPhone.display}</a>
+          <span class="block text-white/50">General enquiries</span>
+        </p>
+        <p>
+          <a href={site.emergencyPhone.href} class="font-semibold text-white hover:text-accent">{site.emergencyPhone.display}</a>
+          <span class="block text-white/50">24/7 emergency</span>
+        </p>
+        <p><a href={`mailto:${site.email}`} class="hover:text-white">{site.email}</a></p>
+        <p>{site.location.town}, {site.location.region}</p>
+      </address>
+      {hasSocial && (
+        <div class="mt-4 flex gap-3">
+          {site.social.facebook && <a href={site.social.facebook} class="hover:text-white" aria-label="Facebook">Facebook</a>}
+          {site.social.instagram && <a href={site.social.instagram} class="hover:text-white" aria-label="Instagram">Instagram</a>}
+          {site.social.linkedin && <a href={site.social.linkedin} class="hover:text-white" aria-label="LinkedIn">LinkedIn</a>}
+        </div>
+      )}
+    </div>
+  </div>
+
+  <div class="border-t border-white/10">
+    <div class="container-x flex flex-col items-center justify-between gap-3 py-6 text-xs text-white/50 sm:flex-row">
+      <p>© {year} {site.name}. All rights reserved.</p>
+      <p class="flex gap-4">
+        <a href="/privacy" class="hover:text-white">Privacy Policy</a>
+        <a href="/terms" class="hover:text-white">Terms</a>
+      </p>
+    </div>
+  </div>
+</footer>

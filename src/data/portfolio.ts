@@ -1,103 +1,92 @@
 /**
- * ┌──────────────────────────────────────────────────────────────────────┐
- * │ ACTION REQUIRED BEFORE LAUNCH                                          │
- * │                                                                        │
- * │ Add your OWN completed-project photographs to /public/portfolio/ and   │
- * │ point each entry's `image` at the real file. Until you do, the gallery │
- * │ shows a clean branded placeholder tile (no broken images), but the     │
- * │ brief is explicit that the portfolio must show ACTUAL completed work.  │
- * │                                                                        │
- * │ Keep the descriptive `alt` text accurate to the photo you add — it is  │
- * │ read by screen readers and used by Google Images for SEO.              │
- * └──────────────────────────────────────────────────────────────────────┘
+ * PORTFOLIO / GALLERY IMAGE MANIFEST
+ * ==================================
+ * Drop the real photos in /public/images/ using the filenames below.
+ *
+ * ⚠️ CATEGORY TAGS: the general project photos have been distributed across
+ * categories in a rotating pattern because the true subject of each shot
+ * isn't known here. Every one is marked `// TODO: confirm category`. Since
+ * YOU know what each photo actually shows, please correct the `category`
+ * value to match. The filter buttons and lightbox update automatically.
+ *
+ * Valid categories: 'Security Doors' | 'Roller Shutters' | 'Industrial Doors'
+ *                 | 'Shop Fronts' | 'Security Gates'
+ * (plus the implicit 'All' filter on the page).
  */
 
+export const CATEGORIES = [
+  'All',
+  'Security Doors',
+  'Roller Shutters',
+  'Industrial Doors',
+  'Shop Fronts',
+  'Security Gates',
+] as const;
+
+export type Category = Exclude<(typeof CATEGORIES)[number], 'All'>;
+
 export interface Project {
-  /** Path under /public, or null to show the branded placeholder tile. */
-  image: string | null;
-  /** Descriptive alt text — describe what is actually in the photo. */
+  src: string;
   alt: string;
-  /** Short project title. */
-  title: string;
-  /** One–two sentence description of the job. */
-  description: string;
-  /** Town the job was in. */
-  town: string;
-  /** Related service slug. */
-  service: string;
+  category: Category;
 }
 
 export const projects: Project[] = [
-  {
-    image: null,
-    alt: 'Reinforced steel security door fitted to a terraced house in Bolton',
-    title: 'Steel security door — Bolton',
-    description:
-      'Insurance-rated steel security door set fitted after an attempted break-in, with anti-snap multi-point locking and a colour-matched finish.',
-    town: 'Bolton',
-    service: 'security-doors',
-  },
-  {
-    image: null,
-    alt: 'Electric insulated roller shutter installed on an industrial unit loading bay',
-    title: 'Industrial roller shutter — Wigan',
-    description:
-      'Electrically operated insulated roller shutter installed on a warehouse loading bay, with safety edge, photocells and remote control.',
-    town: 'Wigan',
-    service: 'industrial-roller-shutters',
-  },
-  {
-    image: null,
-    alt: 'New aluminium shop front with toughened glazing and automatic sliding door',
-    title: 'Aluminium shop front — Manchester',
-    description:
-      'Full aluminium shop front replacement with toughened safety glazing and an automatic sliding entrance door for a city-centre retail unit.',
-    town: 'Manchester',
-    service: 'shop-front-glazing',
-  },
-  {
-    image: null,
-    alt: 'Certified FD30S fire door fitted as a flat entrance door in an apartment block',
-    title: 'FD30S fire doors — Salford',
-    description:
-      'Certified FD30S flat-entrance fire doors fitted across an apartment block, with intumescent and smoke seals, self-closers and full documentation.',
-    town: 'Salford',
-    service: 'fire-doors',
-  },
-  {
-    image: null,
-    alt: 'Insulated sectional garage door in anthracite grey fitted to a detached home',
-    title: 'Sectional garage door — Burnley',
-    description:
-      'Insulated sectional garage door in anthracite grey with electric operation, remote controls and a manual override, fitted to a detached home.',
-    town: 'Burnley',
-    service: 'garage-doors',
-  },
-  {
-    image: null,
-    alt: 'Shop front boarded up after a break-in with a temporary secure panel',
-    title: 'Emergency boarding up — Bury',
-    description:
-      'Overnight emergency call after a break-in — shop front made safe with a secure temporary panel, followed by permanent toughened re-glazing.',
-    town: 'Bury',
-    service: 'emergency-glazing-boarding-up',
-  },
-  {
-    image: null,
-    alt: 'Perforated security grille fitted inside a high-street shop window',
-    title: 'Security grille — Bolton',
-    description:
-      'Perforated punched security grille fitted internally to a high-street shop, keeping the window display visible while protecting against smash-and-grab.',
-    town: 'Bolton',
-    service: 'industrial-roller-shutters',
-  },
-  {
-    image: null,
-    alt: 'Reinforced composite front door in racing green with multi-point locking',
-    title: 'Composite security door — Chorley',
-    description:
-      'Reinforced composite front door in racing green with a multi-point lock and anti-snap cylinder, improving both security and kerb appeal.',
-    town: 'Chorley',
-    service: 'security-doors',
-  },
+  // ── Security Gates (known category — 9 images) ─────────────────────────
+  { src: '/images/ultradoors-security-gates.jpg', alt: 'Bespoke security gate installed by Ultra Doors Security', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-2.jpg', alt: 'Steel security gate protecting a residential entrance', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-3.jpg', alt: 'Commercial security gate fitted to business premises', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-4.jpg', alt: 'Made-to-measure security gate in the North West', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-5.jpg', alt: 'Powder-coated security gate by Ultra Doors Security', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-6.jpg', alt: 'Double security gate installation for a driveway', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-7.jpg', alt: 'Bespoke metal security gate with secure locking', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-8.jpg', alt: 'Security gate fitted to a commercial yard entrance', category: 'Security Gates' },
+  { src: '/images/ultradoors-security-gates-9.jpg', alt: 'Heavy-duty security gate installed by Ultra Doors Security', category: 'Security Gates' },
+
+  // ── Roller Shutters (known + subset) ───────────────────────────────────
+  { src: '/images/Roller-shutter-image.jpg', alt: 'Electric roller shutter fitted to a commercial unit', category: 'Roller Shutters' },
+
+  // ── General project photos (34) — categories rotated, confirm each ─────
+  { src: '/images/ultradoors-2-1.jpg', alt: 'Completed security door installation by Ultra Doors Security', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-3.jpg', alt: 'Roller shutter installation on commercial premises', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-4.jpg', alt: 'Industrial door fitted to a warehouse unit', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-6.jpg', alt: 'Aluminium shop front and glazing project', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-7.jpg', alt: 'Bespoke security door protecting a home', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-8.jpg', alt: 'Manual roller shutter for a shop window', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-9.jpg', alt: 'Durable industrial door for a commercial building', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-10.jpg', alt: 'Shop front fabrication and glazing installation', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-11.jpg', alt: 'High-security door installed by the Ultra Doors team', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-12.jpg', alt: 'Electric roller shutter on a retail frontage', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-13-1.jpg', alt: 'Industrial door built for performance and safety', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-14.jpg', alt: 'Aluminium glazing and shop front by Ultra Doors Security', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-15.jpg', alt: 'Bespoke security door with multi-point locking', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-16.jpg', alt: 'Roller shutter fitted to a commercial doorway', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-17.jpg', alt: 'Industrial door installation for an industrial unit', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-19-1.jpg', alt: 'Shop front glazing solution for a business', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-20.jpg', alt: 'Security door installed to protect a property', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-21.jpg', alt: 'Commercial roller shutter installation', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-22.jpg', alt: 'Reliable industrial door for a warehouse entrance', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-23.jpg', alt: 'Bespoke aluminium shop front installation', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-24.jpg', alt: 'Steel security door fitted by Ultra Doors Security', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-25.jpg', alt: 'Roller shutter protecting a shop front overnight', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-27.jpg', alt: 'Industrial door for a commercial loading bay', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-28.jpg', alt: 'Shop front and glazing fabrication project', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-29.jpg', alt: 'High-security door for domestic property', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-32.jpg', alt: 'Electric roller shutter installed on a unit', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-33.jpg', alt: 'Industrial door built to last for a business', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-34.jpg', alt: 'Aluminium shop front by the Ultra Doors team', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-36.jpg', alt: 'Bespoke security door installation in the North West', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-37-2.jpg', alt: 'Roller shutter for a commercial premises', category: 'Roller Shutters' }, // TODO: confirm category
+  { src: '/images/ultradoors-38.jpg', alt: 'Industrial door fitted to a factory entrance', category: 'Industrial Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-39.jpg', alt: 'Shop front glazing installation for a retailer', category: 'Shop Fronts' }, // TODO: confirm category
+  { src: '/images/ultradoors-40-1.jpg', alt: 'Security door protecting a family home', category: 'Security Doors' }, // TODO: confirm category
+  { src: '/images/ultradoors-41.jpg', alt: 'Roller shutter installation by Ultra Doors Security', category: 'Roller Shutters' }, // TODO: confirm category
 ];
+
+/** Logo / brand assets in /public/images/ */
+export const brand = {
+  // Header/footer wordmark
+  logo: '/images/ultradoors-logo-1.jpg',
+  // Icon / favicon source
+  icon: '/images/ultradoors-ud-logo-original.png',
+};

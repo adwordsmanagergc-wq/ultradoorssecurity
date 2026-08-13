@@ -1,0 +1,137 @@
+---
+import { serviceOptions } from '../data/services';
+
+interface Props {
+  /** Unique id suffix so the form can appear on more than one page safely. */
+  id?: string;
+  compact?: boolean;
+}
+const { id = 'quote' } = Astro.props;
+const formName = 'quote';
+---
+<form
+  id={`form-${id}`}
+  name={formName}
+  method="POST"
+  data-netlify="true"
+  netlify-honeypot="bot-field"
+  action="/thank-you"
+  class="space-y-4"
+>
+  <!-- Netlify + Formspree wiring -->
+  <input type="hidden" name="form-name" value={formName} />
+  <!-- Honeypot (hidden from humans) -->
+  <p class="hidden" aria-hidden="true">
+    <label>Don't fill this out: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+  </p>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for={`name-${id}`} class="mb-1.5 block text-sm font-semibold text-navy">Full name <span class="text-emergency">*</span></label>
+      <input id={`name-${id}`} name="name" type="text" required autocomplete="name" class="form-input" />
+    </div>
+    <div>
+      <label for={`phone-${id}`} class="mb-1.5 block text-sm font-semibold text-navy">Phone number <span class="text-emergency">*</span></label>
+      <input id={`phone-${id}`} name="phone" type="tel" required autocomplete="tel" class="form-input" />
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for={`email-${id}`} class="mb-1.5 block text-sm font-semibold text-navy">Email <span class="text-emergency">*</span></label>
+      <input id={`email-${id}`} name="email" type="email" required autocomplete="email" class="form-input" />
+    </div>
+    <div>
+      <label for={`postcode-${id}`} class="mb-1.5 block text-sm font-semibold text-navy">Postcode <span class="text-emergency">*</span></label>
+      <input id={`postcode-${id}`} name="postcode" type="text" required autocomplete="postal-code" class="form-input" />
+    </div>
+  </div>
+
+  <div>
+    <label for={`service-${id}`} class="mb-1.5 block text-sm font-semibold text-navy">Service required <span class="text-emergency">*</span></label>
+    <select id={`service-${id}`} name="service" required class="form-input">
+      <option value="" disabled selected>Please choose…</option>
+      {serviceOptions.map((s) => <option value={s}>{s}</option>)}
+    </select>
+  </div>
+
+  <div>
+    <label for={`message-${id}`} class="mb-1.5 block text-sm font-semibold text-navy">Tell us about your project</label>
+    <textarea id={`message-${id}`} name="message" rows="4" class="form-input" placeholder="The more detail you give us, the more accurate your quote."></textarea>
+  </div>
+
+  <button type="submit" class="btn-primary w-full sm:w-auto">Get my free quote</button>
+
+  <p class="form-success hidden rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-800" role="status">
+    Thank you — your enquiry has been sent. We'll be in touch shortly. For anything urgent, please call us.
+  </p>
+  <p class="form-error hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700" role="alert">
+    Sorry, something went wrong sending your enquiry. Please call us instead and we'll help straight away.
+  </p>
+</form>
+
+<style>
+  .form-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--muted);
+    background: #fff;
+    padding: 0.7rem 0.9rem;
+    color: var(--navy);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(24, 99, 220, 0.18);
+  }
+</style>
+
+<script is:inline define:vars={{ formId: `form-${id}` }}>
+  (function () {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    var success = form.querySelector('.form-success');
+    var error = form.querySelector('.form-error');
+    var btn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      success.classList.add('hidden');
+      error.classList.add('hidden');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      var original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      var data = new URLSearchParams(new FormData(form));
+      // Posts to Netlify Forms (works on Netlify deployments). To use
+      // Formspree instead, change the fetch URL to your Formspree endpoint
+      // (https://formspree.io/f/xxxx) and set header Accept: application/json.
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: data.toString(),
+      })
+        .then(function (res) {
+          if (res.ok) {
+            form.reset();
+            success.classList.remove('hidden');
+            success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            throw new Error('Bad response');
+          }
+        })
+        .catch(function () {
+          error.classList.remove('hidden');
+        })
+        .finally(function () {
+          btn.disabled = false;
+          btn.textContent = original;
+        });
+    });
+  })();
+</script>

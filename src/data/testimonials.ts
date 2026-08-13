@@ -1,93 +1,78 @@
 /**
- * ┌──────────────────────────────────────────────────────────────────────┐
- * │ ACTION REQUIRED BEFORE LAUNCH                                          │
- * │                                                                        │
- * │ Replace the entries below with your OWN genuine, collected customer    │
- * │ reviews (e.g. copied from your Google Business Profile). The           │
- * │ testimonials page renders Review + AggregateRating structured data,    │
- * │ and Google's guidelines require that this markup reflect REAL reviews  │
- * │ actually left by customers — never invented ones. The samples here     │
- * │ are realistic placeholders to show layout only; swap them for the      │
- * │ real thing and update `aggregateRating` in src/config/business.ts to   │
- * │ match your true rating and review count.                               │
- * └──────────────────────────────────────────────────────────────────────┘
+ * Real customer testimonials — used verbatim. All 5 stars.
+ * Drives the home testimonials carousel and the Review/AggregateRating
+ * JSON-LD schema.
  */
-
 export interface Testimonial {
-  /** Reviewer name as you're permitted to display it. */
   name: string;
-  /** Town — used to group reviews on location pages. */
   town: string;
-  /** Star rating 1–5. */
   rating: number;
-  /** The review text. */
   quote: string;
-  /** Which service the job related to (optional, for context). */
-  service?: string;
-  /** ISO date of the review (optional, improves Review schema). */
-  date?: string;
 }
 
 export const testimonials: Testimonial[] = [
   {
-    name: 'Sample review — replace with a real Bolton customer',
-    town: 'Bolton',
-    rating: 5,
-    quote:
-      'Had a new steel security door fitted after a break-in. The lads turned up when they said, measured everything properly and the door is solid. Tidy job and a fair price — would recommend to anyone in Bolton.',
-    service: 'security-doors',
-    date: '2025-03-14',
-  },
-  {
-    name: 'Sample review — replace with a real Manchester customer',
+    name: 'Jayson Winfield',
     town: 'Manchester',
     rating: 5,
     quote:
-      'Our shop window was put through overnight. They boarded it up within a couple of hours of the call and had new toughened glass in two days later. Saved us from losing a day’s trade. Brilliant emergency service.',
-    service: 'emergency-glazing-boarding-up',
-    date: '2025-01-22',
+      'Very professional company and we are really pleased with the standard of work completed. Customer service and sales team are excellent.',
   },
   {
-    name: 'Sample review — replace with a real Bury customer',
-    town: 'Bury',
+    name: 'Mark Hartley',
+    town: 'Manchester',
     rating: 5,
     quote:
-      'Replaced the roller shutter on our unit that had been playing up for months. Serviced the second one while they were here. Professional, knew exactly what they were doing and no mess left behind.',
-    service: 'industrial-roller-shutters',
-    date: '2024-11-08',
+      'Polite and efficient fitters, kept disruption to a minimum. Very pleased with the quality of the roller shutter but also with the quality of workmanship.',
   },
   {
-    name: 'Sample review — replace with a real Burnley customer',
+    name: 'Andrew Kent',
     town: 'Burnley',
     rating: 5,
     quote:
-      'New insulated garage door and it has made a real difference — much warmer and so much quieter than the old up-and-over. Great communication from quote to fitting. Very happy.',
-    service: 'garage-doors',
-    date: '2025-02-19',
+      'Excellent service - I would highly recommend to anyone for their professionalism, organisation and customer care. Great company!',
   },
   {
-    name: 'Sample review — replace with a real Bolton customer',
+    name: 'Steven Jonson',
+    town: 'Manchester',
+    rating: 5,
+    quote:
+      'Great service by John at Ultra Doors. Thanks for the professionalism, was really nice meeting him. Love the shutter door too!',
+  },
+  {
+    name: 'Sue Owen',
+    town: 'Bury',
+    rating: 5,
+    quote:
+      'The service from Ultra Doors was outstanding from start to finish — Sales Exec, customer service, Surveyor and installer. The installation of the roller shutter was excellent, the installer very efficient, polite and knowledgeable. Lovely finish and all building work was cleared away. We are very happy and I would highly recommend this company.',
+  },
+  {
+    name: 'Danny Jones',
     town: 'Bolton',
     rating: 5,
     quote:
-      'We needed the fire doors in our flats bringing up to standard for the block. They inspected them, told us honestly what needed doing and fitted certified doors with all the paperwork. Straightforward to deal with.',
-    service: 'fire-doors',
-    date: '2024-12-03',
+      'It was a pleasure dealing with Ultra Doors — always pleasant, attentive and informative right through to the final installation. I found them good value for money.',
   },
   {
-    name: 'Sample review — replace with a real Salford customer',
-    town: 'Salford',
+    name: 'Jake Smart',
+    town: 'Bolton',
     rating: 5,
     quote:
-      'Fitted a new aluminium shop front for our unit at the Quays. Looks smart, feels secure and the automatic door works perfectly. From survey to finish they were reliable and easy to deal with.',
-    service: 'shop-front-glazing',
-    date: '2025-04-11',
+      'I was so impressed with the care and attention from the workers on site. The windows and doors are really good quality and the whole fitting process was well executed, including a proper clean up and removal of the old frames and glass.',
+  },
+  {
+    name: 'Emma Ryan',
+    town: 'Bolton',
+    rating: 5,
+    quote:
+      'Really pleased with my windows. The fitter was friendly, professional, clean and tidy. The whole process was really easy. I would definitely recommend this company.',
   },
 ];
 
-/** All testimonials for a given town slug's display name. */
-export function testimonialsForTown(town: string): Testimonial[] {
-  return testimonials.filter(
-    (t) => t.town.toLowerCase() === town.toLowerCase(),
-  );
-}
+/** Derived aggregate for Review schema. */
+export const aggregateRating = {
+  ratingValue: (
+    testimonials.reduce((s, t) => s + t.rating, 0) / testimonials.length
+  ).toFixed(1),
+  reviewCount: testimonials.length,
+};

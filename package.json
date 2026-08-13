@@ -1,27 +1,22 @@
 {
   "name": "ultra-doors-security",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Marketing website for Ultra Doors Security — security doors, fire doors, roller shutters, shop front glazing and emergency glazing across Bolton and Greater Manchester.",
+  "description": "Marketing website for Ultra Doors Security — bespoke security doors & industrial door specialists in Bolton, serving the North West of England.",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "export": "EXPORT=true next build"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
-    "next": "15.1.6",
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "22.10.7",
-    "@types/react": "19.0.7",
-    "@types/react-dom": "19.0.3",
-    "autoprefixer": "10.4.20",
-    "postcss": "8.5.1",
-    "tailwindcss": "3.4.17",
-    "typescript": "5.7.3"
+    "@astrojs/sitemap": "^3.2.1",
+    "@astrojs/tailwind": "^5.1.4",
+    "@fontsource-variable/inter": "^5.1.1",
+    "@fontsource-variable/plus-jakarta-sans": "^5.1.1",
+    "astro": "^5.2.5",
+    "tailwindcss": "^3.4.17"
   }
 }

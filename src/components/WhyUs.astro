@@ -1,0 +1,73 @@
+---
+import { site } from '../data/site';
+
+const promises = [
+  {
+    title: 'Bespoke solutions',
+    text: 'Made to measure for your property — never off-the-shelf.',
+    icon: 'M4 20l4-1 10-10-3-3L5 16zM14 6l3 3',
+  },
+  {
+    title: 'Quality fitting',
+    text: 'Experienced, professional installers on every job.',
+    icon: 'M12 3l2.4 5 5.6.8-4 3.9 1 5.5L12 21l-5-2.8 1-5.5-4-3.9 5.6-.8z',
+  },
+  {
+    title: 'Built to last',
+    text: 'Practical security and dependable, long-term performance.',
+    icon: 'M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z',
+  },
+];
+---
+<section class="bg-white py-20 sm:py-24">
+  <div class="container-x grid items-center gap-12 lg:grid-cols-2">
+    <div class="reveal">
+      <p class="eyebrow">Why choose us</p>
+      <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl">
+        Trusted door specialists across the North West
+      </h2>
+      <p class="mt-4 text-lg text-[#3a4b5f]">
+        For over 15 years we've protected homes and businesses with bespoke,
+        built-to-last security doors and industrial doors — backed by round-the-clock
+        emergency support.
+      </p>
+      <ul class="mt-8 grid gap-3 sm:grid-cols-2">
+        {
+          site.trustPoints.map((point) => (
+            <li class="flex items-center gap-2.5">
+              <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12l4 4 10-10" />
+                </svg>
+              </span>
+              <span class="font-semibold text-navy">{point}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <!-- Our promise panel -->
+    <div class="reveal rounded-3xl bg-gradient-to-br from-navy to-ink p-8 text-white shadow-card sm:p-10">
+      <h3 class="text-2xl font-bold text-white">Our promise</h3>
+      <p class="mt-2 text-white/70">Every installation, every time.</p>
+      <ul class="mt-8 space-y-6">
+        {
+          promises.map((p) => (
+            <li class="flex gap-4">
+              <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent/20 text-accent">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d={p.icon} />
+                </svg>
+              </span>
+              <div>
+                <h4 class="text-lg font-bold text-white">{p.title}</h4>
+                <p class="mt-1 text-white/75">{p.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

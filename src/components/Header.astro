@@ -1,0 +1,116 @@
+---
+import Logo from './Logo.astro';
+import TopBar from './TopBar.astro';
+import { site } from '../data/site';
+
+const nav = [
+  { label: 'Home', href: '/' },
+  { label: 'Services', href: '/#services' },
+  { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Contact', href: '/contact' },
+];
+---
+
+<div class="sticky top-0 z-50">
+  <TopBar />
+  <header class="border-b border-black/5 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <div class="container-x flex items-center justify-between gap-4 py-3">
+      <a href="/" class="rounded-lg" aria-label="Ultra Doors Security — home">
+        <Logo />
+      </a>
+
+      <nav class="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        {
+          nav.map((item) => (
+            <a
+              href={item.href}
+              class="rounded-lg px-3.5 py-2 text-sm font-semibold text-navy/80 transition-colors hover:bg-panel hover:text-navy"
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a
+          href={site.emergencyPhone.href}
+          class="hidden items-center gap-2 rounded-xl border-2 border-panel px-3.5 py-2 text-sm font-bold text-navy transition-colors hover:border-accent hover:text-accent sm:inline-flex"
+        >
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 4h4l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 011-2z"/>
+          </svg>
+          {site.emergencyPhone.display}
+        </a>
+        <a href="/contact" class="hidden rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white shadow-card transition-colors hover:bg-accent-hover sm:inline-block">
+          Get a free quote
+        </a>
+
+        <button
+          type="button"
+          id="menu-toggle"
+          class="inline-flex items-center justify-center rounded-lg p-2 text-navy lg:hidden"
+          aria-label="Open menu"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+        >
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile nav -->
+    <div id="mobile-nav" class="hidden border-t border-black/5 bg-white lg:hidden">
+      <nav class="container-x flex flex-col gap-1 py-3" aria-label="Mobile">
+        {
+          nav.map((item) => (
+            <a
+              href={item.href}
+              class="mobile-link rounded-lg px-3 py-3 text-base font-semibold text-navy hover:bg-panel"
+            >
+              {item.label}
+            </a>
+          ))
+        }
+        <div class="mt-2 grid grid-cols-2 gap-2">
+          <a href={site.emergencyPhone.href} class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-panel px-3 py-3 text-sm font-bold text-navy">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h4l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 011-2z"/>
+            </svg>
+            Call us
+          </a>
+          <a href="/contact" class="rounded-xl bg-accent px-3 py-3 text-center text-sm font-bold text-white">
+            Free quote
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+</div>
+
+<script is:inline>
+  (function () {
+    var btn = document.getElementById('menu-toggle');
+    var menu = document.getElementById('mobile-nav');
+    if (!btn || !menu) return;
+    function close() {
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-label', 'Open menu');
+    }
+    function toggle() {
+      var open = menu.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!open));
+      btn.setAttribute('aria-label', open ? 'Open menu' : 'Close menu');
+    }
+    btn.addEventListener('click', toggle);
+    menu.querySelectorAll('.mobile-link').forEach(function (a) {
+      a.addEventListener('click', close);
+    });
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  })();
+</script>

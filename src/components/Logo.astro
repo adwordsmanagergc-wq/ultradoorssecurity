@@ -1,0 +1,35 @@
+---
+/**
+ * Brand lockup: the real "ud" monogram (optimised, transparent) + wordmark.
+ * Source: /public/images/ultradoors-logo.webp (generated from the owner's
+ * ultradoorslogotransparent.png). Swap that file to change the logo.
+ */
+interface Props {
+  variant?: 'dark' | 'light';
+  class?: string;
+}
+const { variant = 'dark', class: className = '' } = Astro.props;
+const wordColor = variant === 'light' ? '#ffffff' : 'var(--navy)';
+const subColor = variant === 'light' ? '#bdc9d7' : '#5b6b7f';
+---
+
+<span class={`inline-flex items-center gap-2.5 ${className}`}>
+  <img
+    src="/images/ultradoors-logo.webp"
+    alt="Ultra Doors Security logo"
+    width="50"
+    height="40"
+    class="h-9 w-auto shrink-0 sm:h-10"
+    decoding="async"
+  />
+  <span class="leading-none">
+    <span
+      class="block font-display text-lg font-extrabold tracking-tight"
+      style={`color:${wordColor}`}>Ultra Doors</span
+    >
+    <span
+      class="block text-[0.65rem] font-bold uppercase tracking-[0.28em]"
+      style={`color:${subColor}`}>Security</span
+    >
+  </span>
+</span>

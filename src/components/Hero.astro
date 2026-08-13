@@ -1,0 +1,50 @@
+---
+import { site } from '../data/site';
+// Background photo — swap for your best security gate/door shot.
+const heroImage = '/images/ultradoors-security-gates.jpg';
+---
+<section class="relative overflow-hidden bg-navy text-white">
+  <!-- Background image with dark overlay (navy gradient shows if image missing) -->
+  <div
+    class="absolute inset-0 bg-cover bg-center"
+    style={`background-image: linear-gradient(180deg, rgba(21,36,55,0.82) 0%, rgba(2,13,26,0.92) 100%), url('${heroImage}'); background-color: var(--navy);`}
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="container-x relative py-20 sm:py-28 lg:py-32">
+    <div class="max-w-3xl">
+      <p class="eyebrow text-accent">Bespoke · Secure · Built to Last</p>
+      <h1 class="mt-4 text-4xl font-extrabold leading-[1.05] text-white sm:text-5xl lg:text-6xl">
+        Bespoke Security Doors &amp; Industrial Door Specialists
+      </h1>
+      <p class="mt-5 text-xl font-semibold text-white/90 sm:text-2xl">
+        Protecting homes &amp; businesses across the North West
+      </p>
+      <p class="mt-4 max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
+        High quality security doors, roller shutters, industrial doors, shop
+        fronts and glazing solutions. Bespoke, built to last and installed by an
+        experienced team.
+      </p>
+
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+        <a href="/contact" class="btn-primary text-base">
+          Get your free quote
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"></path>
+          </svg>
+        </a>
+        <a href={site.emergencyPhone.href} class="btn-emergency text-base">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 4h4l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 011-2z"/>
+          </svg>
+          Call 24/7 emergency
+        </a>
+      </div>
+
+      <p class="mt-6 text-sm font-medium text-white/70">
+        15+ years' experience · NVQ-qualified fitters · Free surveys &amp; quotations
+      </p>
+    </div>
+  </div>
+</section>

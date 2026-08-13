@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+---
+<Base
+  title="Terms & Conditions | Ultra Doors Security"
+  description="The terms that apply to enquiries, quotations and work carried out by Ultra Doors Security."
+  path="/terms"
+>
+  <Header />
+  <main id="main" class="bg-white">
+    <section class="container-x max-w-3xl py-16">
+      <h1 class="text-3xl font-extrabold sm:text-4xl">Terms &amp; Conditions</h1>
+      <div class="prose-clean mt-6">
+        <p>
+          These terms apply to enquiries, quotations and work carried out by
+          {site.name}. They are provided as a starting point — please review and
+          adapt them with your own advisor before publishing.
+        </p>
+        <h2 class="mt-8 text-xl font-bold">Quotations</h2>
+        <p>
+          Quotations are based on the survey and information available at the
+          time and are valid for the period stated on the quotation. Where site
+          conditions differ from those surveyed, we will discuss any change with
+          you before proceeding.
+        </p>
+        <h2 class="mt-8 text-xl font-bold">Work &amp; workmanship</h2>
+        <p>
+          We carry out all work with reasonable skill and care using suitable
+          materials. Our installation workmanship is guaranteed, and the products
+          we supply carry the relevant manufacturer's warranty; the specific
+          cover is confirmed with your quotation.
+        </p>
+        <h2 class="mt-8 text-xl font-bold">Emergency call-outs</h2>
+        <p>
+          For 24/7 emergency work, any call-out charge is agreed with you before
+          we attend so the cost is clear from the outset.
+        </p>
+        <h2 class="mt-8 text-xl font-bold">Contact</h2>
+        <p>
+          Questions about these terms? Email
+          <a href={`mailto:${site.email}`} class="font-semibold text-accent hover:underline">{site.email}</a>
+          or call {site.enquiriesPhone.display}.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Base>

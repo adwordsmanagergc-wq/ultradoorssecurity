@@ -1,116 +1,127 @@
-# Ultra Doors Security — Marketing Website
+# Ultra Doors Security — Website
 
-A fast, SEO-optimised marketing site for **Ultra Doors Security**, a Bolton-based
-trade business specialising in security doors, fire doors, industrial roller
-shutters, shop front glazing, garage doors and 24-hour emergency glazing across
-Bolton and Greater Manchester.
+A fast, modern, statically-generated marketing site for **Ultra Doors Security**
+— bespoke security doors & industrial door specialists in Bolton, serving the
+North West of England.
 
-Built with **Next.js (App Router) + TypeScript + Tailwind CSS**, statically
-generated (SSG) for every page, and deployable to Vercel or as a fully static
-export.
+Built with **Astro + Tailwind CSS**. Fully responsive, accessible (WCAG 2.1 AA
+oriented), SEO-optimised, and built for Lighthouse 95+.
 
 ---
 
-## ⚠️ Before you go live — replace the real business data
-
-The site is built and production-ready, but a handful of details **must be
-confirmed and replaced with your genuine business facts**. Everything you need
-to change lives in a small number of clearly-marked places:
-
-| What | Where | Notes |
-|------|-------|-------|
-| **Phone numbers** | `src/config/business.ts` | Currently use Ofcom's reserved fiction ranges (`01204 496xxx`, `07700 900xxx`) so they can't ring a real person. Swap for your real landline & mobile. |
-| **Address** | `src/config/business.ts` | Must match your Google Business Profile **exactly** (Name, Address, Phone must be identical everywhere for local SEO). |
-| **Email, domain, opening hours, social links** | `src/config/business.ts` | Confirm all. |
-| **Google rating & review count** | `src/config/business.ts` → `aggregateRating` | Set to the real figures shown on your Google profile. |
-| **Customer testimonials** | `src/data/testimonials.ts` | The samples are placeholders. Replace with your **own genuine, collected reviews** — Google's rules require Review/AggregateRating schema to reflect real reviews only. |
-| **Portfolio photos** | `src/data/portfolio.ts` + `public/portfolio/` | Add your **actual completed-project photos** and point each entry's `image` at the file. Until then a clean branded "photo coming soon" tile shows (no broken images). |
-| **Coverage area** | `src/data/locations.ts` | Confirm the towns listed are ones you genuinely serve. |
-| **Contact form backend** | `.env.local` | Set `NEXT_PUBLIC_FORMSPREE_ENDPOINT` (see below). |
-
-> The business facts baked into the copy — *over 15 years' experience,
-> NVQ-qualified fitters, 24-hour emergency callout, domestic & commercial* —
-> come from the project brief. Double-check they're accurate before publishing.
-
----
-
-## Getting started
+## Quick start
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev        # http://localhost:4321
+npm run build      # static output -> ./dist
+npm run preview    # preview the production build
 ```
 
-## Build
-
-```bash
-npm run build        # standard build (for Vercel / Node hosting)
-npm run export       # fully static build -> ./out  (EXPORT=true next build)
-```
-
-## Deployment
-
-### Vercel (recommended)
-Push to GitHub and import the repo in Vercel. No config needed — `next/image`
-serves AVIF/WebP automatically and the sitemap/robots are generated at build.
-Add `NEXT_PUBLIC_FORMSPREE_ENDPOINT` in the Vercel project's Environment
-Variables.
-
-### Static export (any static host / object storage / GitHub Pages)
-```bash
-npm run export
-```
-The `./out` folder is a complete static site. Under static export, `next/image`
-optimisation is disabled (no server), so add already-optimised WebP/AVIF images
-to `public/`.
-
-## Contact form
-
-The form posts to [Formspree](https://formspree.io) — a serverless handler that
-works with a static site (no PHP/WordPress). Create a free form, then set:
-
-```
-NEXT_PUBLIC_FORMSPREE_ENDPOINT=https://formspree.io/f/xxxxxxxx
-```
-
-Without it, the form gracefully falls back to opening the visitor's email client
-so no enquiry is lost. Prefer Resend or another handler? Swap the `fetch` call in
-`src/components/ContactForm.tsx`.
+Requires Node 18+ (Node 20 recommended).
 
 ---
 
-## SEO features built in
+## Where to drop your images
 
-- Unique `<title>` (< 60 chars) and meta description (< 155 chars) per page,
-  each targeting a specific keyword
-- **JSON-LD structured data**: `LocalBusiness` on every page (NAP, hours,
-  geo, `areaServed` for each town), `Review` + `AggregateRating` on the
-  testimonials page, `BreadcrumbList` on inner pages, `Service` on service
-  pages, `FAQPage` on the FAQs page
-- Auto-generated **`sitemap.xml`** (real pages only) and **`robots.txt`**
-  (allow all, points to the sitemap)
-- Semantic HTML — exactly one `<h1>` per page, logical `<h2>`/`<h3>` hierarchy
-- `next/image` for automatic AVIF/WebP, lazy-loading and sizing
-- Consistent **NAP block in the footer** on every page + embedded Google Map on
-  `/contact/` and each location page
-- Internal linking between every service and location page
-- Lean JS (~109 kB First Load) for strong Core Web Vitals
+Put every photo in **`/public/images/`** using the exact filenames listed in
+`public/images/README.md` (and `src/data/portfolio.ts`). Until a file is added,
+the site shows a clean branded **"Image coming soon"** placeholder — so you can
+deploy immediately and add photos as they come in.
+
+- **Hero background** reads from `ultradoors-security-gates.jpg`.
+- **Social share image**: add `og-default.jpg` (1200×630) for rich link previews.
+- **Logo**: the header/footer use a crisp inline-SVG logo by default. To use your
+  own logo image instead, edit `src/components/Logo.astro` (a one-line swap is
+  documented at the top of that file).
+
+## Correcting the gallery categories
+
+The portfolio filters (All · Security Doors · Roller Shutters · Industrial Doors
+· Shop Fronts · Security Gates) are driven by **`src/data/portfolio.ts`**. The
+general project photos were distributed across categories in a rotating pattern
+and each is flagged `// TODO: confirm category`. Since you know what each photo
+actually shows, correct the `category` value and the filters + lightbox update
+automatically.
+
+## Editing content
+
+Everything content-related lives in small data files:
+
+| File | Controls |
+|------|----------|
+| `src/data/site.ts` | Business name, phones, email, address, hours, trust points, social links |
+| `src/data/services.ts` | The six service cards + the quote-form dropdown options |
+| `src/data/portfolio.ts` | Gallery image manifest + categories, logo/brand paths |
+| `src/data/testimonials.ts` | Customer reviews (also feeds Review schema) |
+
+Phone numbers, email and address are **used verbatim** and kept in one place so
+they stay consistent across the header, footer, forms and structured data.
+
+## Contact / quote form
+
+The forms use **Netlify Forms** (works on a static Netlify deploy — no backend):
+`data-netlify="true"` + a honeypot field (`bot-field`) for spam protection, with
+progressive-enhancement AJAX submission and inline success/error states. On
+success (or with JS disabled) it lands on `/thank-you`.
+
+**Prefer Formspree?** In `src/components/QuoteForm.astro`, change the `fetch('/')`
+URL to your Formspree endpoint (`https://formspree.io/f/xxxx`) and add the header
+`Accept: application/json`. (Search for the `TODO`/comment in that file.)
+
+---
+
+## Deployment
+
+### Netlify (recommended for the built-in forms)
+- Connect the repo. Build command `npm run build`, publish directory `dist`
+  (already set in `netlify.toml`).
+- Forms are detected automatically from the built HTML — submissions appear
+  under **Forms** in the Netlify dashboard. Add a notification email there.
+
+### Vercel
+- Import the repo; Astro is auto-detected (build `npm run build`, output `dist`).
+- Note: Netlify Forms only work on Netlify — switch the form to Formspree (above)
+  if hosting on Vercel.
+
+Before going live, set your real domain in **`astro.config.mjs`** (`site:`) — it
+drives canonical URLs, the sitemap and Open Graph absolute URLs.
+
+---
+
+## SEO & technical
+
+- Per-page `<title>` / meta description, canonical, Open Graph + Twitter cards
+- **JSON-LD**: `LocalBusiness` on every page (name, `+447570335330`, Bolton /
+  Greater Manchester / GB, `areaServed` North West England, 24/7 opening hours,
+  price range); `Review` + `AggregateRating` on the home page; `BreadcrumbList`
+  on inner pages
+- Auto-generated `sitemap-index.xml` (via `@astrojs/sitemap`) and `robots.txt`
+- Semantic HTML, one `<h1>` per page, skip-to-content link, visible focus rings,
+  ARIA labels, keyboard-accessible menu, gallery filters and lightbox
+- Self-hosted variable fonts (Inter + Plus Jakarta Sans) — no render-blocking
+  third-party font requests
+- Lazy-loaded images with width/height to avoid layout shift (CLS)
+- Minimal, dependency-free vanilla JS (menu, gallery/lightbox, carousel, reveal)
 
 ## Project structure
 
 ```
+public/
+  images/            ← drop all photos here (see its README)
+  favicon.svg  robots.txt
 src/
-  app/                 # App Router pages (all statically generated)
-    services/[slug]/   # 6 service pages from one template
-    locations/[slug]/  # 7 location pages from one template
-    sitemap.ts robots.ts
-  components/          # Header, Footer, Hero, cards, form, map, JSON-LD…
-  config/business.ts  # ← single source of truth for all NAP data
-  data/               # services, locations, testimonials, faqs, portfolio
-  lib/seo.ts          # metadata + structured-data builders
-public/               # favicon, logo, OG image, (add /portfolio photos here)
+  components/        Header, TopBar, Hero, TrustBar, ServiceCard, ServicesGrid,
+                     WhyUs, Gallery, Testimonials, QuoteForm, Footer,
+                     FloatingCallButton, Logo
+  data/              site, services, portfolio, testimonials
+  layouts/Base.astro meta, JSON-LD, fonts, skip link, reveal + image fallback
+  pages/             index, portfolio, contact, thank-you, privacy, terms, 404
+  styles/global.css  brand CSS variables + Tailwind theme
+astro.config.mjs  tailwind.config.mjs  netlify.toml
 ```
 
-To edit content, change the data files in `src/data/` and the config in
-`src/config/business.ts` — the pages, nav, footer, sitemap and schema all read
-from them.
+## Cleaned up from the old site
+Single canonical email, one consistent "15+ years" experience figure, no
+"lorem ipsum", no 50%-off summer-sale banner, and clean social placeholders in
+place of the old dead links.
