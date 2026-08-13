@@ -63,7 +63,7 @@ export const services: Service[] = [
     slug: 'emergency-repairs',
     title: 'Emergency Repairs',
     description:
-      '24/7 emergency call out for doors, shutters and glazing — including boarding up and same-day glass replacement.',
+      '24/7 emergency call out for doors, shutters and glazing, including boarding up and same-day glass replacement.',
     image: '/images/broken-glass-door.jpg',
     alt: 'Smashed glazed door awaiting emergency glass replacement',
     category: 'All',

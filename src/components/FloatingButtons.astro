@@ -1,0 +1,35 @@
+---
+import { site } from '../data/site';
+---
+<div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+  <!-- WhatsApp chat -->
+  <a
+    href={site.whatsapp.href}
+    target="_blank"
+    rel="noopener"
+    class="group inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-4 py-3.5 font-bold text-white shadow-[0_10px_30px_-8px_rgba(37,211,102,0.7)] transition-all hover:bg-[#1ebe5b] focus-visible:outline-none sm:px-5"
+    aria-label="Chat to us on WhatsApp"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.2-.7.2-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/>
+      <path d="M12 2a10 10 0 00-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1012 2zm0 18.3c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.3 8.3 0 1112 20.3z"/>
+    </svg>
+    <span class="hidden sm:inline">WhatsApp us</span>
+  </a>
+
+  <!-- 24/7 emergency call -->
+  <a
+    href={site.emergencyPhone.href}
+    class="group inline-flex items-center gap-2.5 rounded-full bg-emergency px-4 py-3.5 font-bold text-white shadow-[0_10px_30px_-8px_rgba(225,29,42,0.7)] transition-all hover:bg-emergency-hover focus-visible:outline-none sm:px-5"
+    aria-label={`24/7 emergency, call ${site.emergencyPhone.display}`}
+  >
+    <span class="relative flex h-3 w-3">
+      <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70"></span>
+      <span class="relative inline-flex h-3 w-3 rounded-full bg-white"></span>
+    </span>
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 4h4l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 011-2z"/>
+    </svg>
+    <span class="hidden sm:inline">24/7 Emergency</span>
+  </a>
+</div>

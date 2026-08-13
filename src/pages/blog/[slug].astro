@@ -1,0 +1,186 @@
+---
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { site } from '../../data/site';
+import {
+  allPosts,
+  buildPost,
+  sameServiceOtherTowns,
+  otherServicesSameTown,
+} from '../../lib/blog';
+import { getBlogService } from '../../data/blogServices';
+import { getBlogTown } from '../../data/blogTowns';
+
+export function getStaticPaths() {
+  return allPosts().map((post) => ({
+    params: { slug: post.slug },
+    props: { slug: post.slug, index: 0 },
+  }));
+}
+
+const { slug } = Astro.props as { slug: string };
+// Rebuild the post from its parts (keeps the page self-contained).
+const [serviceSlug, townSlug] = (() => {
+  // service slugs can contain hyphens, so match the known town suffix.
+  const town = getBlogTown(slug.slice(slug.lastIndexOf('-') + 1));
+  if (town) return [slug.slice(0, slug.lastIndexOf('-')), town.slug];
+  return [slug, ''];
+})();
+const service = getBlogService(serviceSlug);
+const town = getBlogTown(townSlug);
+if (!service || !town) throw new Error(`Unknown blog post: ${slug}`);
+
+// Deterministic index for the date, matching allPosts ordering.
+const idx = allPosts().findIndex((p) => p.slug === slug);
+const post = buildPost(service, town, idx < 0 ? 0 : idx);
+
+const nearby = sameServiceOtherTowns(service, town);
+const otherServices = otherServicesSameTown(service, town);
+const areaList =
+  town.areas.slice(0, -1).join(', ') + ' and ' + town.areas[town.areas.length - 1];
+
+const canonical = new URL(post.path, site.url).href;
+const image = new URL('/images/og-default.jpg', site.url).href;
+
+const blogPosting = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: `${post.h1} | Ultra Doors Security`,
+  description: post.description,
+  datePublished: post.datePublished,
+  dateModified: post.datePublished,
+  image,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+  author: { '@type': 'Organization', name: site.name, url: site.url },
+  publisher: {
+    '@type': 'Organization',
+    name: site.name,
+    logo: { '@type': 'ImageObject', url: new URL('/favicon.png', site.url).href },
+  },
+  about: { '@id': `${site.url}/#business` },
+  areaServed: { '@type': 'City', name: town.name },
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: post.faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site.url + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: site.url + '/blog/' },
+    { '@type': 'ListItem', position: 3, name: post.h1, item: canonical },
+  ],
+};
+---
+<Base
+  title={post.title}
+  description={post.description}
+  path={post.path}
+  jsonLd={[blogPosting, faqSchema, breadcrumb]}
+>
+  <Header />
+  <main id="main">
+    <!-- Hero -->
+    <section class="bg-navy text-white">
+      <div class="container-x py-12 sm:py-16">
+        <nav aria-label="Breadcrumb" class="mb-4 text-sm text-white/60">
+          <a href="/" class="hover:text-white">Home</a>
+          <span aria-hidden="true" class="px-1">/</span>
+          <a href="/blog/" class="hover:text-white">Blog</a>
+          <span aria-hidden="true" class="px-1">/</span>
+          <span class="text-white">{post.h1}</span>
+        </nav>
+        <p class="eyebrow text-accent">{service.name} · {town.county}</p>
+        <h1 class="mt-3 text-4xl font-extrabold text-white sm:text-5xl">{post.h1}</h1>
+        <p class="mt-4 max-w-2xl text-lg text-white/80">{post.intro}</p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <a href="/contact" class="btn-primary">Get a free quote in {town.name}</a>
+          <a href={site.emergencyPhone.href} class="btn-emergency">
+            24/7 emergency: {site.emergencyPhone.display}
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <article class="bg-white py-14">
+      <div class="container-x grid gap-12 lg:grid-cols-[1fr_20rem]">
+        <div class="prose-clean max-w-none">
+          <h2 class="text-2xl font-extrabold text-navy">{service.name} for {town.name} homes and businesses</h2>
+          {post.body.map((p) => <p>{p}</p>)}
+
+          <h2 class="mt-8 text-2xl font-extrabold text-navy">Local knowledge across {town.name}</h2>
+          <p>{town.intro}</p>
+          <p>{post.angle}</p>
+
+          <h2 class="mt-8 text-2xl font-extrabold text-navy">What you get with Ultra Doors Security</h2>
+          <ul class="my-4 grid gap-2 sm:grid-cols-2">
+            {post.benefits.map((b) => (
+              <li class="flex items-start gap-2">
+                <svg class="mt-1 h-4 w-4 flex-shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+
+          <h2 class="mt-8 text-2xl font-extrabold text-navy">Areas we cover around {town.name}</h2>
+          <p>
+            We regularly work across {town.name} and nearby areas including {areaList}. {town.coverage}
+          </p>
+
+          <h2 class="mt-8 text-2xl font-extrabold text-navy">FAQs: {service.name} in {town.name}</h2>
+          <dl class="mt-4 divide-y divide-black/10">
+            {post.faqs.map((f) => (
+              <div class="py-4">
+                <dt class="font-bold text-navy">{f.q}</dt>
+                <dd class="mt-1.5">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <!-- Cross links: other services in this town -->
+          <h2 class="mt-10 text-2xl font-extrabold text-navy">Other services in {town.name}</h2>
+          <ul class="my-4 grid gap-2 sm:grid-cols-2">
+            {otherServices.map((l) => (
+              <li class="list-none"><a href={l.path} class="font-semibold text-accent hover:underline">{l.name}</a></li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="space-y-6">
+          <div class="rounded-2xl bg-cream p-6 shadow-card ring-1 ring-black/5">
+            <h2 class="text-lg font-bold text-navy">Free quote in {town.name}</h2>
+            <p class="mt-1 text-sm text-[#3a4b5f]">Local, NVQ-qualified fitters. Free survey and a clear written price.</p>
+            <a href={site.enquiriesPhone.href} class="mt-4 flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-3 font-bold text-white hover:bg-ink">
+              {site.enquiriesPhone.display}
+            </a>
+            <a href={site.emergencyPhone.href} class="mt-2 block rounded-xl border border-black/10 px-4 py-2.5 text-center text-sm font-semibold text-navy hover:bg-white">
+              24/7 emergency: {site.emergencyPhone.display}
+            </a>
+            <a href="/contact" class="mt-3 block rounded-xl bg-accent px-4 py-3 text-center font-bold text-white hover:bg-accent-hover">Get a free quote</a>
+          </div>
+
+          <div class="rounded-2xl border border-black/10 bg-white p-6">
+            <h2 class="text-sm font-bold uppercase tracking-wide text-navy">{service.name} nearby</h2>
+            <ul class="mt-3 space-y-2 text-sm">
+              {nearby.map((l) => (
+                <li><a href={l.path} class="text-accent hover:underline">{l.name}</a></li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </article>
+  </main>
+  <Footer />
+</Base>

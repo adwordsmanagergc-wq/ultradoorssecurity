@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { site } from '../../data/site';
+import { blogServices } from '../../data/blogServices';
+import { blogTowns } from '../../data/blogTowns';
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site.url + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: site.url + '/blog/' },
+  ],
+};
+
+const total = blogServices.length * blogTowns.length;
+---
+<Base
+  title="Local Guides & Advice | Ultra Doors Security"
+  description="Local guides on security doors, roller shutters, industrial doors, shop fronts, gates and emergency repairs across towns in the North West of England."
+  path="/blog/"
+  jsonLd={[breadcrumb]}
+>
+  <Header />
+  <main id="main">
+    <section class="bg-navy text-white">
+      <div class="container-x py-14 sm:py-16">
+        <nav aria-label="Breadcrumb" class="mb-4 text-sm text-white/60">
+          <a href="/" class="hover:text-white">Home</a>
+          <span aria-hidden="true" class="px-1">/</span>
+          <span class="text-white">Blog</span>
+        </nav>
+        <h1 class="text-4xl font-extrabold text-white sm:text-5xl">Local guides &amp; advice</h1>
+        <p class="mt-4 max-w-3xl text-lg text-white/80">
+          Practical local guidance on security doors, roller shutters, industrial
+          doors, shop fronts and glazing, security gates and 24/7 emergency
+          repairs, written for the towns we cover across the North West.
+        </p>
+      </div>
+    </section>
+
+    <!-- Browse by service -->
+    <section class="bg-cream py-12">
+      <div class="container-x">
+        <h2 class="text-2xl font-extrabold text-navy">Browse by service</h2>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {
+            blogServices.map((s) => (
+              <a href={`#${s.slug}`} class="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-navy hover:border-accent hover:text-accent">
+                {s.name}
+              </a>
+            ))
+          }
+        </div>
+        <p class="mt-4 text-sm text-[#5b6b7f]">{total} local guides across {blogTowns.length} towns.</p>
+      </div>
+    </section>
+
+    <!-- Grouped by service, each listing every town -->
+    <section class="bg-white py-8">
+      <div class="container-x space-y-14">
+        {
+          blogServices.map((s) => (
+            <div id={s.slug} class="scroll-mt-28">
+              <div class="flex items-baseline justify-between gap-4 border-b border-black/10 pb-3">
+                <h2 class="text-2xl font-extrabold text-navy">{s.name}</h2>
+                <span class="text-sm text-[#5b6b7f]">by town</span>
+              </div>
+              <p class="mt-3 max-w-3xl text-[#3a4b5f]">{s.summary}</p>
+              <ul class="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {blogTowns.map((t) => (
+                  <li>
+                    <a
+                      href={`/blog/${s.slug}-${t.slug}/`}
+                      class="flex items-center justify-between gap-2 rounded-xl border border-black/10 bg-white px-4 py-3 font-semibold text-navy transition-colors hover:border-accent hover:text-accent"
+                    >
+                      <span>{s.name} in {t.name}</span>
+                      <svg class="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="bg-navy">
+      <div class="container-x flex flex-col items-center gap-4 py-12 text-center">
+        <h2 class="text-2xl font-extrabold text-white sm:text-3xl">Need a quote in your area?</h2>
+        <p class="max-w-xl text-white/80">Free surveys, honest prices and 24/7 emergency cover across the North West.</p>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <a href="/contact" class="btn-primary">Get a free quote</a>
+          <a href={site.whatsapp.href} target="_blank" rel="noopener" class="btn-ghost">Chat on WhatsApp</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Base>

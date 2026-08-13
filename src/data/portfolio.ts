@@ -3,7 +3,7 @@
  * ==================================
  * Every image below is a real photo in /public/images/, categorised by its
  * actual subject. Adjust any `category` if you'd like a photo to appear under
- * a different filter — the gallery + lightbox update automatically.
+ * a different filter, the gallery + lightbox update automatically.
  *
  * Categories: 'Security Doors' | 'Roller Shutters' | 'Industrial Doors'
  *           | 'Shop Fronts & Glazing' | 'Security Gates'

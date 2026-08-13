@@ -1,5 +1,5 @@
 /**
- * Real customer testimonials — used verbatim. All 5 stars.
+ * Real customer testimonials, used verbatim. All 5 stars.
  * Drives the home testimonials carousel and the Review/AggregateRating
  * JSON-LD schema.
  */
@@ -44,14 +44,14 @@ export const testimonials: Testimonial[] = [
     town: 'Bury',
     rating: 5,
     quote:
-      'The service from Ultra Doors was outstanding from start to finish — Sales Exec, customer service, Surveyor and installer. The installation of the roller shutter was excellent, the installer very efficient, polite and knowledgeable. Lovely finish and all building work was cleared away. We are very happy and I would highly recommend this company.',
+      'The service from Ultra Doors was outstanding from start to finish, Sales Exec, customer service, Surveyor and installer. The installation of the roller shutter was excellent, the installer very efficient, polite and knowledgeable. Lovely finish and all building work was cleared away. We are very happy and I would highly recommend this company.',
   },
   {
     name: 'Danny Jones',
     town: 'Bolton',
     rating: 5,
     quote:
-      'It was a pleasure dealing with Ultra Doors — always pleasant, attentive and informative right through to the final installation. I found them good value for money.',
+      'It was a pleasure dealing with Ultra Doors, always pleasant, attentive and informative right through to the final installation. I found them good value for money.',
   },
   {
     name: 'Jake Smart',

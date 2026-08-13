@@ -16,12 +16,18 @@ export const site = {
   // Single canonical email
   email: 'info@ultradoorssecurity.co.uk',
 
+  // WhatsApp chat (same number as the 24/7 line). wa.me needs no + or spaces.
+  whatsapp: {
+    number: '447570335330',
+    href: 'https://wa.me/447570335330?text=Hi%20Ultra%20Doors%20Security%2C%20I%27d%20like%20a%20quote',
+  },
+
   location: {
     town: 'Bolton',
     region: 'Greater Manchester',
     areaServed: 'North West England',
     country: 'GB',
-    // Approximate Bolton centre — refine to the real premises if desired.
+    // Approximate Bolton centre, refine to the real premises if desired.
     latitude: 53.5769,
     longitude: -2.4282,
   },
@@ -37,7 +43,7 @@ export const site = {
     '24/7 emergency support',
   ],
 
-  // Social profiles — the old site had dead links; leave clean placeholders
+  // Social profiles, the old site had dead links; leave clean placeholders
   // and fill these in (or remove) when real profiles exist.
   social: {
     facebook: '', // TODO: add real URL or leave blank to hide

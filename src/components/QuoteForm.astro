@@ -13,7 +13,7 @@ const formName = 'quote';
 // Serverless form handler.
 //  • On VERCEL (or anywhere): set PUBLIC_FORMSPREE_ENDPOINT in your env to a
 //    Formspree form URL (https://formspree.io/f/xxxxxxxx). The form then posts
-//    straight to Formspree — works on a fully static site, no backend needed.
+//    straight to Formspree, works on a fully static site, no backend needed.
 //  • If it's NOT set, the form falls back to opening the visitor's email client
 //    so an enquiry is never silently lost.
 //  • The Netlify attributes below are harmless on Vercel and let the same form
@@ -35,7 +35,7 @@ const nextUrl = `${site.url}/thank-you`;
   <!-- Handler wiring -->
   <input type="hidden" name="form-name" value={formName} />
   <input type="hidden" name="_next" value={nextUrl} />
-  <input type="hidden" name="_subject" value="New website enquiry — Ultra Doors Security" />
+  <input type="hidden" name="_subject" value="New website enquiry, Ultra Doors Security" />
   <!-- Honeypot (hidden from humans; _gotcha works for Formspree & Netlify) -->
   <p class="hidden" aria-hidden="true">
     <label>Don't fill this out: <input name="_gotcha" tabindex="-1" autocomplete="off" /></label>
@@ -79,7 +79,7 @@ const nextUrl = `${site.url}/thank-you`;
   <button type="submit" class="btn-primary w-full sm:w-auto">Get my free quote</button>
 
   <p class="form-success hidden rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-800" role="status">
-    Thank you — your enquiry has been sent. We'll be in touch shortly. For anything urgent, please call us.
+    Thank you, your enquiry has been sent. We'll be in touch shortly. For anything urgent, please call us.
   </p>
   <p class="form-error hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700" role="alert">
     Sorry, something went wrong sending your enquiry. Please call us instead and we'll help straight away.
@@ -138,7 +138,7 @@ const nextUrl = `${site.url}/thank-you`;
         });
         window.location.href =
           'mailto:' + email +
-          '?subject=' + encodeURIComponent('Website enquiry — Ultra Doors Security') +
+          '?subject=' + encodeURIComponent('Website enquiry, Ultra Doors Security') +
           '&body=' + encodeURIComponent(lines.join('\n'));
         return;
       }

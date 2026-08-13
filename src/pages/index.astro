@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import GateIntro from '../components/GateIntro.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import TrustBar from '../components/TrustBar.astro';
@@ -9,7 +10,6 @@ import Gallery from '../components/Gallery.astro';
 import Testimonials from '../components/Testimonials.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import Footer from '../components/Footer.astro';
-import FloatingCallButton from '../components/FloatingCallButton.astro';
 import { site } from '../data/site';
 import { projects } from '../data/portfolio';
 import { testimonials, aggregateRating } from '../data/testimonials';
@@ -49,6 +49,7 @@ const reviewSchema = {
   path="/"
   jsonLd={[reviewSchema]}
 >
+  <GateIntro />
   <Header />
   <div id="main">
     <Hero />
@@ -99,7 +100,7 @@ const reviewSchema = {
           <h3 class="mt-4 text-2xl font-bold text-white">Need us urgently?</h3>
           <p class="mt-2 text-white/75">
             Break-in, storm damage or a failed shutter? Our emergency team covers
-            the North West around the clock — including boarding up and same-day
+            the North West around the clock, including boarding up and same-day
             glass replacement.
           </p>
           <div class="mt-6 space-y-3">
@@ -121,5 +122,4 @@ const reviewSchema = {
     </section>
   </div>
   <Footer />
-  <FloatingCallButton />
 </Base>
