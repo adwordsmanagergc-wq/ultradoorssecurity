@@ -1,5 +1,6 @@
 ---
 import { serviceOptions } from '../data/services';
+import { site } from '../data/site';
 
 interface Props {
   /** Unique id suffix so the form can appear on more than one page safely. */
@@ -8,21 +9,36 @@ interface Props {
 }
 const { id = 'quote' } = Astro.props;
 const formName = 'quote';
+
+// Serverless form handler.
+//  • On VERCEL (or anywhere): set PUBLIC_FORMSPREE_ENDPOINT in your env to a
+//    Formspree form URL (https://formspree.io/f/xxxxxxxx). The form then posts
+//    straight to Formspree — works on a fully static site, no backend needed.
+//  • If it's NOT set, the form falls back to opening the visitor's email client
+//    so an enquiry is never silently lost.
+//  • The Netlify attributes below are harmless on Vercel and let the same form
+//    work if you ever host on Netlify instead.
+const formspree = import.meta.env.PUBLIC_FORMSPREE_ENDPOINT || '';
+const action = formspree || '/thank-you';
+const nextUrl = `${site.url}/thank-you`;
 ---
 <form
   id={`form-${id}`}
   name={formName}
   method="POST"
+  action={action}
   data-netlify="true"
-  netlify-honeypot="bot-field"
-  action="/thank-you"
+  netlify-honeypot="_gotcha"
+  data-formspree={formspree}
   class="space-y-4"
 >
-  <!-- Netlify + Formspree wiring -->
+  <!-- Handler wiring -->
   <input type="hidden" name="form-name" value={formName} />
-  <!-- Honeypot (hidden from humans) -->
+  <input type="hidden" name="_next" value={nextUrl} />
+  <input type="hidden" name="_subject" value="New website enquiry — Ultra Doors Security" />
+  <!-- Honeypot (hidden from humans; _gotcha works for Formspree & Netlify) -->
   <p class="hidden" aria-hidden="true">
-    <label>Don't fill this out: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+    <label>Don't fill this out: <input name="_gotcha" tabindex="-1" autocomplete="off" /></label>
   </p>
 
   <div class="grid gap-4 sm:grid-cols-2">
@@ -87,7 +103,7 @@ const formName = 'quote';
   }
 </style>
 
-<script is:inline define:vars={{ formId: `form-${id}` }}>
+<script is:inline define:vars={{ formId: `form-${id}`, formspree, email: site.email }}>
   (function () {
     var form = document.getElementById(formId);
     if (!form) return;
@@ -95,35 +111,45 @@ const formName = 'quote';
     var error = form.querySelector('.form-error');
     var btn = form.querySelector('button[type="submit"]');
 
+    function showSuccess() {
+      form.reset();
+      success.classList.remove('hidden');
+      success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       success.classList.add('hidden');
       error.classList.add('hidden');
+      if (form.querySelector('[name="_gotcha"]').value) return; // bot
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
+
+      var fd = new FormData(form);
+
+      // No handler configured → fall back to the visitor's email client so
+      // the enquiry is never silently lost.
+      if (!formspree) {
+        var lines = [];
+        fd.forEach(function (v, k) {
+          if (k[0] !== '_' && k !== 'form-name' && v) lines.push(k + ': ' + v);
+        });
+        window.location.href =
+          'mailto:' + email +
+          '?subject=' + encodeURIComponent('Website enquiry — Ultra Doors Security') +
+          '&body=' + encodeURIComponent(lines.join('\n'));
+        return;
+      }
+
       var original = btn.textContent;
       btn.disabled = true;
       btn.textContent = 'Sending…';
-
-      var data = new URLSearchParams(new FormData(form));
-      // Posts to Netlify Forms (works on Netlify deployments). To use
-      // Formspree instead, change the fetch URL to your Formspree endpoint
-      // (https://formspree.io/f/xxxx) and set header Accept: application/json.
-      fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data.toString(),
-      })
+      fetch(formspree, { method: 'POST', headers: { Accept: 'application/json' }, body: fd })
         .then(function (res) {
-          if (res.ok) {
-            form.reset();
-            success.classList.remove('hidden');
-            success.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } else {
-            throw new Error('Bad response');
-          }
+          if (res.ok) showSuccess();
+          else throw new Error('bad response');
         })
         .catch(function () {
           error.classList.remove('hidden');

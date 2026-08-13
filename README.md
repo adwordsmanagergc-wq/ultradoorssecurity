@@ -60,14 +60,28 @@ they stay consistent across the header, footer, forms and structured data.
 
 ## Contact / quote form
 
-The forms use **Netlify Forms** (works on a static Netlify deploy — no backend):
-`data-netlify="true"` + a honeypot field (`bot-field`) for spam protection, with
-progressive-enhancement AJAX submission and inline success/error states. On
-success (or with JS disabled) it lands on `/thank-you`.
+The form works on a fully static host (no backend) via a serverless form
+handler, with a honeypot (`_gotcha`), progressive-enhancement AJAX submission
+and inline success/error states.
 
-**Prefer Formspree?** In `src/components/QuoteForm.astro`, change the `fetch('/')`
-URL to your Formspree endpoint (`https://formspree.io/f/xxxx`) and add the header
-`Accept: application/json`. (Search for the `TODO`/comment in that file.)
+### On Vercel (your setup) — use Formspree
+Netlify Forms only work on Netlify, so on Vercel point the form at Formspree:
+
+1. Create a free form at **https://formspree.io** → copy its endpoint
+   (`https://formspree.io/f/xxxxxxxx`).
+2. In your Vercel project: **Settings → Environment Variables** →
+   add `PUBLIC_FORMSPREE_ENDPOINT` = that endpoint (all environments) → redeploy.
+
+That's it — submissions then arrive in your Formspree inbox (and forward to your
+email). **Until the variable is set, the form falls back to opening the
+visitor's email client**, so no enquiry is lost, but do set it for the best
+experience. Prefer **Resend** or a Vercel serverless function instead? Say the
+word and I'll wire it up.
+
+### On Netlify (alternative)
+The form already carries `data-netlify="true"` + the honeypot, so Netlify
+detects it automatically — submissions appear under **Forms** in the dashboard,
+no env var needed.
 
 ---
 
