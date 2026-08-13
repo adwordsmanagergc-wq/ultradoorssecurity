@@ -424,14 +424,20 @@ const inv = site.invoice;
           </div>
         </div>`;
         fitPreview();
+        // Refit once the logo image loads (its height affects the total height).
+        els.preview().querySelectorAll('img').forEach((img) => {
+          if (!(img as HTMLImageElement).complete) img.addEventListener('load', fitPreview, { once: true });
+        });
       }
 
-      // Scale the fixed-width invoice preview to fit its container (nice on mobile).
+      // Scale the fixed-width invoice preview to fit its container (key on mobile).
       function fitPreview() {
         const pv = els.preview();
         const scaler = pv.parentElement as HTMLElement;
-        if (!scaler || scaler.clientWidth === 0) return;
-        const scale = Math.min(1, scaler.clientWidth / 820);
+        if (!scaler) return;
+        const w = scaler.clientWidth;
+        if (w === 0) return; // pane not visible yet; the ResizeObserver will refit
+        const scale = Math.min(1, w / 820);
         pv.style.transform = `scale(${scale})`;
         scaler.style.height = pv.offsetHeight * scale + 'px';
       }
@@ -859,7 +865,7 @@ const inv = site.invoice;
         document.querySelectorAll('.tabbtn').forEach((b) =>
           b.setAttribute('aria-selected', String((b as HTMLElement).dataset.tab === name))
         );
-        if (isPrev) fitPreview();
+        if (isPrev) requestAnimationFrame(fitPreview);
       }
 
       function exportRecords() {
@@ -908,6 +914,13 @@ const inv = site.invoice;
           const f = (e.target as HTMLInputElement).files?.[0];
           if (f) importRecords(f);
         });
+
+        // Re-fit the preview whenever its container changes size, including
+        // when the Preview tab first becomes visible on mobile (0 -> width).
+        const scalerEl = els.preview().parentElement as HTMLElement;
+        if (typeof ResizeObserver !== 'undefined' && scalerEl) {
+          new ResizeObserver(() => fitPreview()).observe(scalerEl);
+        }
 
         if (!loadDraft()) freshInvoice();
         switchTab('edit');
