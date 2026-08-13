@@ -96,7 +96,7 @@ const finial = (x: number) =>
     background:
       radial-gradient(120% 80% at 50% 20%, rgba(24, 99, 220, 0.18), transparent 60%),
       radial-gradient(120% 120% at 50% 100%, #04060b, #0a1020 60%, #0d1526);
-    animation: gate-out 0.6s ease 2s forwards;
+    animation: gate-out 0.8s ease 4.4s forwards;
   }
   .gate-stage {
     position: absolute;
@@ -116,12 +116,12 @@ const finial = (x: number) =>
   .gate-leaf--left {
     left: 0;
     transform-origin: left center;
-    animation: gate-open-left 1.3s cubic-bezier(0.65, 0, 0.2, 1) 0.9s forwards;
+    animation: gate-open-left 2.1s cubic-bezier(0.65, 0, 0.2, 1) 2.6s forwards;
   }
   .gate-leaf--right {
     right: 0;
     transform-origin: right center;
-    animation: gate-open-right 1.3s cubic-bezier(0.65, 0, 0.2, 1) 0.9s forwards;
+    animation: gate-open-right 2.1s cubic-bezier(0.65, 0, 0.2, 1) 2.6s forwards;
   }
 
   .gate-emblem {
@@ -133,7 +133,7 @@ const finial = (x: number) =>
     flex-direction: column;
     align-items: center;
     text-align: center;
-    animation: emblem-out 0.55s ease 0.75s forwards;
+    animation: emblem-in 0.7s ease-out both, emblem-out 0.7s ease 2.4s forwards;
     will-change: transform, opacity;
   }
   .gate-emblem__ring {
@@ -178,6 +178,10 @@ const finial = (x: number) =>
   @keyframes gate-open-right {
     to { transform: rotateY(115deg); }
   }
+  @keyframes emblem-in {
+    from { opacity: 0; transform: translate(-50%, -46%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
   @keyframes emblem-out {
     to { opacity: 0; transform: translate(-50%, -60%) scale(1.18); }
   }
@@ -200,6 +204,6 @@ const finial = (x: number) =>
     setTimeout(function () {
       el.style.visibility = 'hidden';
       el.style.pointerEvents = 'none';
-    }, 3200);
+    }, 6000);
   })();
 </script>
