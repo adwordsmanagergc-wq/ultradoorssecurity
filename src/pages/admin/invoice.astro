@@ -92,7 +92,7 @@ const inv = site.invoice;
               <h2 class="text-lg font-bold">Products / services</h2>
               <button id="add-row" type="button" class="rounded-lg bg-accent px-3 py-1.5 text-sm font-bold text-white hover:bg-accent-hover">+ Add row</button>
             </div>
-            <p class="mt-1 text-xs text-[#5b6b7f]">Total is the sum of the Price column. Unit is just the quantity shown.</p>
+            <p class="mt-1 text-xs text-[#5b6b7f]">Amount = Unit × Price. The invoice Total adds up every Amount.</p>
             <div id="rows" class="mt-4 space-y-3"></div>
           </div>
 
@@ -140,6 +140,7 @@ const inv = site.invoice;
       import autoTable from 'jspdf-autotable';
       import {
         invoiceTotal,
+        lineAmount,
         formatGBP,
         formatDateUK,
         makeInvoiceNumber,
@@ -207,8 +208,8 @@ const inv = site.invoice;
             <div class="grid grid-cols-2 gap-2">
               <input data-k="productType" value="${escapeAttr(r.productType)}" placeholder="Product type (e.g. R/S)" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
               <div class="grid grid-cols-2 gap-2">
-                <input data-k="unit" value="${escapeAttr(r.unit)}" placeholder="Unit" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
-                <input data-k="price" value="${escapeAttr(r.price)}" type="number" step="0.01" min="0" placeholder="Price £" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
+                <input data-k="unit" value="${escapeAttr(r.unit)}" inputmode="decimal" placeholder="Qty" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
+                <input data-k="price" value="${escapeAttr(r.price)}" type="number" step="0.01" min="0" placeholder="Price each £" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
               </div>
             </div>
             <textarea data-k="description" rows="2" placeholder="Description of the work" class="mt-2 w-full rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none">${escapeHtml(r.description)}</textarea>
@@ -267,6 +268,7 @@ const inv = site.invoice;
               <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;">${escapeHtml(it.description)}</td>
               <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;text-align:center;">${escapeHtml(it.unit)}</td>
               <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;text-align:right;white-space:nowrap;">${it.price ? formatGBP(it.price) : ''}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;text-align:right;white-space:nowrap;font-weight:600;">${it.price ? formatGBP(lineAmount(it)) : ''}</td>
             </tr>`
           )
           .join('');
@@ -304,10 +306,11 @@ const inv = site.invoice;
                 <th style="padding:11px 12px;text-align:left;border-top-left-radius:8px;">Product Type</th>
                 <th style="padding:11px 12px;text-align:left;">Description</th>
                 <th style="padding:11px 12px;text-align:center;">Unit</th>
-                <th style="padding:11px 12px;text-align:right;border-top-right-radius:8px;">Price</th>
+                <th style="padding:11px 12px;text-align:right;">Price</th>
+                <th style="padding:11px 12px;text-align:right;border-top-right-radius:8px;">Amount</th>
               </tr>
             </thead>
-            <tbody>${itemsRows || '<tr><td colspan="4" style="padding:16px;color:#b9c3d1;">Add your products or services on the left.</td></tr>'}</tbody>
+            <tbody>${itemsRows || '<tr><td colspan="5" style="padding:16px;color:#b9c3d1;">Add your products or services on the left.</td></tr>'}</tbody>
           </table>
 
           <div style="display:flex;justify-content:flex-end;margin-top:18px;">
@@ -425,18 +428,25 @@ const inv = site.invoice;
         // Table
         const body = d.items
           .filter((it) => it.productType || it.description || it.unit || it.price)
-          .map((it) => [it.productType, it.description, it.unit, it.price ? formatGBP(it.price) : '']);
+          .map((it) => [
+            it.productType,
+            it.description,
+            it.unit,
+            it.price ? formatGBP(it.price) : '',
+            it.price ? formatGBP(lineAmount(it)) : '',
+          ]);
         autoTable(doc, {
           startY: Math.max(ay + 4, 92),
-          head: [['Product Type', 'Description', 'Unit', 'Price']],
-          body: body.length ? body : [['', '', '', '']],
+          head: [['Product Type', 'Description', 'Unit', 'Price', 'Amount']],
+          body: body.length ? body : [['', '', '', '', '']],
           theme: 'grid',
           headStyles: { fillColor: navy, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
           bodyStyles: { fontSize: 10, textColor: [30, 41, 59], cellPadding: 3 },
           columnStyles: {
-            0: { cellWidth: 30, fontStyle: 'bold' },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 30, halign: 'right' },
+            0: { cellWidth: 26, fontStyle: 'bold' },
+            2: { cellWidth: 15, halign: 'center' },
+            3: { cellWidth: 24, halign: 'right' },
+            4: { cellWidth: 26, halign: 'right', fontStyle: 'bold' },
           },
           margin: { left: m, right: m },
         });
