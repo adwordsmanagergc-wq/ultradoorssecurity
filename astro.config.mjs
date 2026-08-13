@@ -9,9 +9,9 @@ export default defineConfig({
   integrations: [
     tailwind({ applyBaseStyles: false }),
     sitemap({
-      // Keep utility pages out of the sitemap.
+      // Keep utility and owner-only pages out of the sitemap.
       filter: (page) =>
-        !/\/(thank-you|404)\/?$/.test(page),
+        !/\/(thank-you|404)\/?$/.test(page) && !/\/admin(\/|$)/.test(page),
     }),
   ],
   build: {

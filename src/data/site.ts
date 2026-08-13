@@ -50,6 +50,41 @@ export const site = {
     instagram: '',
     linkedin: '',
   },
+
+  // --- Invoicing (owner-only /admin/invoice tool) ------------------------
+  // Everything here is filled onto every invoice automatically. Edit these
+  // values once and they apply to all future invoices.
+  invoice: {
+    // Passcode to open the invoicing tool. This is a light gate only (the
+    // check runs in the browser), so keep the tool URL private and change
+    // this to your own code. Can also be set via PUBLIC_INVOICE_PASSCODE.
+    passcode: 'ultra2009',
+    // Trading name shown at the top of the invoice.
+    tradingName: 'Ultra Doors Security',
+    // Legal entity that appears on the bank line.
+    legalName: 'ULTRADOORS NW Ltd',
+    addressLines: ['Bolton', 'Greater Manchester'], // TODO: add full premises address
+    phone: '01204 244403',
+    emergencyPhone: '07570 335330',
+    email: 'info@ultradoorssecurity.co.uk',
+    website: 'ultradoorssecurity.co.uk',
+    // Real bank details from the current invoice.
+    bank: {
+      name: 'ULTRADOORS NW Ltd',
+      sortCode: '20-55-41',
+      accountNumber: '00670332',
+    },
+    signOff: 'Kind regards',
+    signatory: 'John McDonald',
+    // Payment terms line shown under the total.
+    terms: 'Payment due within 14 days of invoice date.',
+    // VAT: owner is not VAT registered, so no VAT line by default.
+    vatRegistered: false,
+    vatRate: 20,
+    vatNumber: '',
+    // Invoice number format: PREFIX-YYYY-NNN (NNN auto-increments locally).
+    numberPrefix: 'UDS',
+  },
 } as const;
 
 export type Site = typeof site;

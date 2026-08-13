@@ -1,0 +1,626 @@
+---
+import '../../styles/global.css';
+import { site } from '../../data/site';
+
+// Owner-only tool: keep it out of search indexes.
+export const prerender = true;
+const inv = site.invoice;
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Invoicing · Ultra Doors Security</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+  </head>
+  <body class="min-h-screen bg-panel text-navy">
+    <!-- Passcode gate -->
+    <div id="gate" class="fixed inset-0 z-50 grid place-items-center bg-ink px-4">
+      <form id="gate-form" class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-card">
+        <div class="flex justify-center">
+          <img src="/images/invoice-logo.png" alt="Ultra Doors Security" class="h-14 w-auto" />
+        </div>
+        <h1 class="mt-5 text-center text-xl font-extrabold">Invoicing login</h1>
+        <p class="mt-1 text-center text-sm text-[#5b6b7f]">Enter your passcode to continue.</p>
+        <input
+          id="gate-code"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          class="mt-5 w-full rounded-xl border border-muted px-4 py-3 text-center text-lg tracking-widest focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+          placeholder="Passcode"
+          aria-label="Passcode"
+        />
+        <p id="gate-error" class="mt-2 hidden text-center text-sm font-medium text-emergency">Incorrect passcode, please try again.</p>
+        <button type="submit" class="btn-primary mt-4 w-full">Unlock</button>
+        <a href="/" class="mt-3 block text-center text-sm text-[#5b6b7f] hover:text-accent">Back to website</a>
+      </form>
+    </div>
+
+    <!-- App -->
+    <div id="app" class="hidden">
+      <header class="border-b border-black/10 bg-white">
+        <div class="mx-auto flex max-w-content items-center justify-between gap-4 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <img src="/images/invoice-logo.png" alt="Ultra Doors Security" class="h-9 w-auto" />
+            <span class="text-lg font-extrabold">Invoicing</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="/" class="rounded-lg px-3 py-2 text-sm font-semibold text-navy hover:bg-panel">Website</a>
+            <button id="logout" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Log out</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="mx-auto grid max-w-content gap-8 px-4 py-8 lg:grid-cols-[400px_1fr]">
+        <!-- FORM -->
+        <section class="no-print space-y-6">
+          <div class="rounded-2xl bg-white p-6 shadow-card">
+            <h2 class="text-lg font-bold">Invoice details</h2>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <label class="block text-sm">
+                <span class="font-semibold text-[#5b6b7f]">Invoice no.</span>
+                <input id="f-number" type="text" class="mt-1 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none" />
+              </label>
+              <label class="block text-sm">
+                <span class="font-semibold text-[#5b6b7f]">Date</span>
+                <input id="f-date" type="date" class="mt-1 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none" />
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-white p-6 shadow-card">
+            <h2 class="text-lg font-bold">Client</h2>
+            <label class="mt-4 block text-sm">
+              <span class="font-semibold text-[#5b6b7f]">Client name</span>
+              <input id="f-client" type="text" placeholder="e.g. Mill Stores Cleveleys C/O Ena Mill" class="mt-1 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none" />
+            </label>
+            <label class="mt-3 block text-sm">
+              <span class="font-semibold text-[#5b6b7f]">Address</span>
+              <textarea id="f-address" rows="3" placeholder="Flapper Fold Lane&#10;Atherton&#10;M46 0HB" class="mt-1 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none"></textarea>
+            </label>
+            <label class="mt-3 block text-sm">
+              <span class="font-semibold text-[#5b6b7f]">Client email <span class="font-normal">(for sending)</span></span>
+              <input id="f-email" type="email" placeholder="client@example.com" class="mt-1 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none" />
+            </label>
+          </div>
+
+          <div class="rounded-2xl bg-white p-6 shadow-card">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold">Products / services</h2>
+              <button id="add-row" type="button" class="rounded-lg bg-accent px-3 py-1.5 text-sm font-bold text-white hover:bg-accent-hover">+ Add row</button>
+            </div>
+            <p class="mt-1 text-xs text-[#5b6b7f]">Total is the sum of the Price column. Unit is just the quantity shown.</p>
+            <div id="rows" class="mt-4 space-y-3"></div>
+          </div>
+
+          <div class="rounded-2xl bg-white p-6 shadow-card">
+            <h2 class="text-lg font-bold">Notes <span class="text-sm font-normal text-[#5b6b7f]">(optional)</span></h2>
+            <textarea id="f-notes" rows="2" placeholder="Anything else to add to the invoice." class="mt-3 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none"></textarea>
+          </div>
+
+          <div class="sticky bottom-0 rounded-2xl bg-navy p-4 shadow-card">
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-pdf" type="button" class="rounded-xl bg-white px-4 py-3 font-bold text-navy hover:bg-panel">Download PDF</button>
+              <button id="btn-print" type="button" class="rounded-xl border border-white/30 px-4 py-3 font-bold text-white hover:bg-white/10">Print</button>
+              <button id="btn-send" type="button" class="col-span-2 rounded-xl bg-accent px-4 py-3 font-bold text-white hover:bg-accent-hover">Send to client</button>
+              <button id="btn-new" type="button" class="col-span-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10">Start new invoice</button>
+            </div>
+            <p id="send-note" class="mt-3 hidden text-center text-sm text-white"></p>
+          </div>
+        </section>
+
+        <!-- PREVIEW -->
+        <section>
+          <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-[#5b6b7f] no-print">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            Live preview
+          </div>
+          <div id="invoice-preview" class="mx-auto w-full max-w-[820px] bg-white shadow-card"></div>
+        </section>
+      </main>
+    </div>
+
+    <style>
+      @media print {
+        body { background: #fff; }
+        .no-print, #gate { display: none !important; }
+        #app { display: block !important; }
+        header, main > section.no-print { display: none !important; }
+        main { display: block !important; padding: 0 !important; }
+        #invoice-preview { box-shadow: none !important; max-width: none !important; }
+      }
+    </style>
+
+    <script>
+      import { site } from '../../data/site';
+      import { jsPDF } from 'jspdf';
+      import autoTable from 'jspdf-autotable';
+      import {
+        invoiceTotal,
+        formatGBP,
+        formatDateUK,
+        makeInvoiceNumber,
+        addressLines,
+      } from '../../lib/invoice';
+
+      const inv = site.invoice;
+      const PASSCODE =
+        (import.meta.env.PUBLIC_INVOICE_PASSCODE as string) || inv.passcode;
+
+      // ---------- Passcode gate ----------
+      const gate = document.getElementById('gate')!;
+      const app = document.getElementById('app')!;
+      function unlock() {
+        gate.style.display = 'none';
+        app.classList.remove('hidden');
+      }
+      if (sessionStorage.getItem('uds_admin_ok') === '1') unlock();
+      document.getElementById('gate-form')!.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const code = (document.getElementById('gate-code') as HTMLInputElement).value.trim();
+        if (code === PASSCODE) {
+          sessionStorage.setItem('uds_admin_ok', '1');
+          unlock();
+          init();
+        } else {
+          document.getElementById('gate-error')!.classList.remove('hidden');
+        }
+      });
+      document.getElementById('logout')!.addEventListener('click', () => {
+        sessionStorage.removeItem('uds_admin_ok');
+        location.reload();
+      });
+
+      // ---------- State ----------
+      type Row = { productType: string; description: string; unit: string; price: string };
+      const DRAFT = 'uds_invoice_draft';
+      const SEQ = 'uds_invoice_seq';
+
+      function todayISO() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      function nextSeq() {
+        return (parseInt(localStorage.getItem(SEQ) || '0', 10) || 0) + 1;
+      }
+      function genNumber() {
+        return makeInvoiceNumber(inv.numberPrefix, nextSeq(), new Date().getFullYear());
+      }
+
+      const els = {
+        number: () => document.getElementById('f-number') as HTMLInputElement,
+        date: () => document.getElementById('f-date') as HTMLInputElement,
+        client: () => document.getElementById('f-client') as HTMLInputElement,
+        address: () => document.getElementById('f-address') as HTMLTextAreaElement,
+        email: () => document.getElementById('f-email') as HTMLInputElement,
+        notes: () => document.getElementById('f-notes') as HTMLTextAreaElement,
+        rows: () => document.getElementById('rows')!,
+        preview: () => document.getElementById('invoice-preview')!,
+      };
+
+      function rowHtml(r: Row, i: number) {
+        return `
+          <div class="row rounded-xl border border-muted p-3" data-i="${i}">
+            <div class="grid grid-cols-2 gap-2">
+              <input data-k="productType" value="${escapeAttr(r.productType)}" placeholder="Product type (e.g. R/S)" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
+              <div class="grid grid-cols-2 gap-2">
+                <input data-k="unit" value="${escapeAttr(r.unit)}" placeholder="Unit" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
+                <input data-k="price" value="${escapeAttr(r.price)}" type="number" step="0.01" min="0" placeholder="Price £" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
+              </div>
+            </div>
+            <textarea data-k="description" rows="2" placeholder="Description of the work" class="mt-2 w-full rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none">${escapeHtml(r.description)}</textarea>
+            <button type="button" class="del-row mt-1 text-xs font-semibold text-emergency hover:underline">Remove</button>
+          </div>`;
+      }
+
+      function readRows(): Row[] {
+        return Array.from(els.rows().querySelectorAll('.row')).map((el) => {
+          const get = (k: string) =>
+            (el.querySelector(`[data-k="${k}"]`) as HTMLInputElement | HTMLTextAreaElement).value;
+          return {
+            productType: get('productType'),
+            description: get('description'),
+            unit: get('unit'),
+            price: get('price'),
+          };
+        });
+      }
+
+      function currentData() {
+        const rows = readRows();
+        return {
+          number: els.number().value,
+          dateISO: els.date().value,
+          clientName: els.client().value,
+          clientAddress: els.address().value,
+          clientEmail: els.email().value,
+          notes: els.notes().value,
+          items: rows.map((r) => ({
+            productType: r.productType,
+            description: r.description,
+            unit: r.unit,
+            price: parseFloat(r.price) || 0,
+          })),
+          _rows: rows,
+        };
+      }
+
+      function saveDraft() {
+        const d = currentData();
+        localStorage.setItem(DRAFT, JSON.stringify(d));
+      }
+
+      // ---------- Preview ----------
+      function renderPreview() {
+        const d = currentData();
+        const total = invoiceTotal(d.items);
+        const addr = addressLines(d.clientAddress);
+        const itemsRows = d.items
+          .filter((it) => it.productType || it.description || it.unit || it.price)
+          .map(
+            (it) => `
+            <tr>
+              <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;font-weight:600;">${escapeHtml(it.productType)}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;">${escapeHtml(it.description)}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;text-align:center;">${escapeHtml(it.unit)}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #e7edf4;text-align:right;white-space:nowrap;">${it.price ? formatGBP(it.price) : ''}</td>
+            </tr>`
+          )
+          .join('');
+
+        els.preview().innerHTML = `
+        <div style="padding:44px 46px;font-family:Inter,system-ui,sans-serif;color:#152437;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;">
+            <div>
+              <img src="/images/invoice-logo.png" alt="" style="height:60px;width:auto;" />
+              <div style="margin-top:14px;font-weight:800;font-size:15px;">${escapeHtml(inv.tradingName)}</div>
+              <div style="font-size:12px;color:#5b6b7f;line-height:1.5;margin-top:2px;">
+                ${inv.addressLines.map(escapeHtml).join('<br>')}<br>
+                ${escapeHtml(inv.phone)} · ${escapeHtml(inv.emergencyPhone)}<br>
+                ${escapeHtml(inv.email)} · ${escapeHtml(inv.website)}
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:34px;font-weight:800;letter-spacing:-0.02em;color:#1863dc;line-height:1;">INVOICE</div>
+              <div style="margin-top:12px;font-size:12px;color:#5b6b7f;">Invoice no.</div>
+              <div style="font-weight:700;">${escapeHtml(d.number)}</div>
+              <div style="margin-top:6px;font-size:12px;color:#5b6b7f;">Date</div>
+              <div style="font-weight:700;">${formatDateUK(d.dateISO)}</div>
+            </div>
+          </div>
+
+          <div style="height:3px;background:linear-gradient(90deg,#1863dc,#e11d2a);border-radius:2px;margin:22px 0;"></div>
+
+          <div style="font-size:12px;color:#5b6b7f;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">Bill to</div>
+          <div style="margin-top:6px;font-weight:800;font-size:16px;">${escapeHtml(d.clientName) || '<span style="color:#b9c3d1;">Client name</span>'}</div>
+          <div style="font-size:13px;color:#33445a;line-height:1.5;">${addr.map(escapeHtml).join('<br>')}</div>
+
+          <table style="width:100%;border-collapse:collapse;margin-top:26px;font-size:13px;">
+            <thead>
+              <tr style="background:#152437;color:#fff;">
+                <th style="padding:11px 12px;text-align:left;border-top-left-radius:8px;">Product Type</th>
+                <th style="padding:11px 12px;text-align:left;">Description</th>
+                <th style="padding:11px 12px;text-align:center;">Unit</th>
+                <th style="padding:11px 12px;text-align:right;border-top-right-radius:8px;">Price</th>
+              </tr>
+            </thead>
+            <tbody>${itemsRows || '<tr><td colspan="4" style="padding:16px;color:#b9c3d1;">Add your products or services on the left.</td></tr>'}</tbody>
+          </table>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+            <div style="min-width:220px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;background:#eff5fb;border:2px solid #1863dc;border-radius:10px;padding:12px 16px;">
+                <span style="font-weight:800;font-size:15px;">Total</span>
+                <span style="font-weight:800;font-size:20px;color:#1863dc;">${formatGBP(total)}</span>
+              </div>
+            </div>
+          </div>
+
+          ${d.notes ? `<div style="margin-top:22px;font-size:12.5px;color:#33445a;"><strong>Notes:</strong> ${escapeHtml(d.notes)}</div>` : ''}
+
+          <div style="margin-top:34px;padding-top:18px;border-top:1px solid #e7edf4;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+            <div style="font-size:12.5px;color:#33445a;line-height:1.7;">
+              <div style="font-weight:800;color:#152437;">Bank details</div>
+              ${escapeHtml(inv.bank.name)}<br>
+              Sort code ${escapeHtml(inv.bank.sortCode)}<br>
+              Account number ${escapeHtml(inv.bank.accountNumber)}
+            </div>
+            <div style="font-size:12.5px;color:#33445a;line-height:1.7;text-align:right;">
+              <div>${escapeHtml(inv.terms)}</div>
+              <div style="margin-top:10px;">${escapeHtml(inv.signOff)}</div>
+              <div style="font-weight:800;color:#152437;">${escapeHtml(inv.signatory)}</div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // ---------- PDF ----------
+      let logoDataUrl: string | null = null;
+      async function loadLogo() {
+        if (logoDataUrl) return logoDataUrl;
+        const res = await fetch('/images/invoice-logo.png');
+        const blob = await res.blob();
+        logoDataUrl = await new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result as string);
+          r.readAsDataURL(blob);
+        });
+        return logoDataUrl;
+      }
+
+      async function buildPdf() {
+        const d = currentData();
+        const total = invoiceTotal(d.items);
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        const W = 210;
+        const m = 14;
+        const navy = [21, 36, 55] as [number, number, number];
+        const blue = [24, 99, 220] as [number, number, number];
+        const grey = [91, 107, 127] as [number, number, number];
+
+        // Logo
+        try {
+          const logo = await loadLogo();
+          doc.addImage(logo, 'PNG', m, 12, 30, 30 * (353 / 440));
+        } catch {}
+
+        // Header right
+        doc.setTextColor(...blue);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(26);
+        doc.text('INVOICE', W - m, 22, { align: 'right' });
+        doc.setFontSize(9);
+        doc.setTextColor(...grey);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Invoice no.', W - m, 30, { align: 'right' });
+        doc.setTextColor(...navy);
+        doc.setFont('helvetica', 'bold');
+        doc.text(d.number || '', W - m, 34.5, { align: 'right' });
+        doc.setTextColor(...grey);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Date', W - m, 41, { align: 'right' });
+        doc.setTextColor(...navy);
+        doc.setFont('helvetica', 'bold');
+        doc.text(formatDateUK(d.dateISO), W - m, 45.5, { align: 'right' });
+
+        // Business block (left, under logo)
+        let by = 44;
+        doc.setTextColor(...navy);
+        doc.setFontSize(11);
+        doc.text(inv.tradingName, m, by);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...grey);
+        by += 5;
+        [...inv.addressLines, `${inv.phone}  ·  ${inv.emergencyPhone}`, `${inv.email}  ·  ${inv.website}`].forEach((line) => {
+          doc.text(line, m, by);
+          by += 4.2;
+        });
+
+        // Divider (below the business block so it never overlaps the text)
+        doc.setDrawColor(...blue);
+        doc.setLineWidth(0.8);
+        doc.line(m, 66, W - m, 66);
+
+        // Bill to
+        doc.setFontSize(8);
+        doc.setTextColor(...grey);
+        doc.setFont('helvetica', 'bold');
+        doc.text('BILL TO', m, 74);
+        doc.setFontSize(12);
+        doc.setTextColor(...navy);
+        doc.text(d.clientName || '', m, 80);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(51, 68, 90);
+        let ay = 85.5;
+        addressLines(d.clientAddress).forEach((line) => {
+          doc.text(line, m, ay);
+          ay += 5;
+        });
+
+        // Table
+        const body = d.items
+          .filter((it) => it.productType || it.description || it.unit || it.price)
+          .map((it) => [it.productType, it.description, it.unit, it.price ? formatGBP(it.price) : '']);
+        autoTable(doc, {
+          startY: Math.max(ay + 4, 92),
+          head: [['Product Type', 'Description', 'Unit', 'Price']],
+          body: body.length ? body : [['', '', '', '']],
+          theme: 'grid',
+          headStyles: { fillColor: navy, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
+          bodyStyles: { fontSize: 10, textColor: [30, 41, 59], cellPadding: 3 },
+          columnStyles: {
+            0: { cellWidth: 30, fontStyle: 'bold' },
+            2: { cellWidth: 20, halign: 'center' },
+            3: { cellWidth: 30, halign: 'right' },
+          },
+          margin: { left: m, right: m },
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY || 120;
+
+        // Total box
+        doc.setFillColor(239, 245, 251);
+        doc.setDrawColor(...blue);
+        doc.setLineWidth(0.6);
+        doc.roundedRect(W - m - 70, finalY + 6, 70, 14, 2, 2, 'FD');
+        doc.setTextColor(...navy);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text('Total', W - m - 65, finalY + 15);
+        doc.setTextColor(...blue);
+        doc.setFontSize(14);
+        doc.text(formatGBP(total), W - m - 4, finalY + 15, { align: 'right' });
+
+        let fy = finalY + 34;
+        if (d.notes) {
+          doc.setTextColor(51, 68, 90);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          const notes = doc.splitTextToSize('Notes: ' + d.notes, W - 2 * m);
+          doc.text(notes, m, fy);
+          fy += notes.length * 4.5 + 6;
+        }
+
+        // Bank + sign off near the bottom
+        const bottomY = Math.max(fy, 250);
+        doc.setDrawColor(231, 237, 244);
+        doc.setLineWidth(0.4);
+        doc.line(m, bottomY - 6, W - m, bottomY - 6);
+        doc.setTextColor(...navy);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('Bank details', m, bottomY);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(51, 68, 90);
+        doc.text(inv.bank.name, m, bottomY + 5.5);
+        doc.text(`Sort code ${inv.bank.sortCode}`, m, bottomY + 10.5);
+        doc.text(`Account number ${inv.bank.accountNumber}`, m, bottomY + 15.5);
+
+        doc.text(inv.terms, W - m, bottomY, { align: 'right' });
+        doc.text(inv.signOff, W - m, bottomY + 8, { align: 'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...navy);
+        doc.text(inv.signatory, W - m, bottomY + 13, { align: 'right' });
+
+        return { doc, data: d };
+      }
+
+      function fileName(d: { number: string; clientName: string }) {
+        const client = (d.clientName || 'client').replace(/[^a-z0-9]+/gi, '-').slice(0, 30);
+        return `Invoice-${d.number || 'draft'}-${client}.pdf`;
+      }
+
+      async function downloadPdf() {
+        const { doc, data } = await buildPdf();
+        doc.save(fileName(data));
+        return data;
+      }
+
+      // ---------- Send ----------
+      async function sendToClient() {
+        const d = currentData();
+        const note = document.getElementById('send-note')!;
+        if (!d.clientEmail) {
+          note.textContent = 'Add the client email above first, then press Send.';
+          note.classList.remove('hidden');
+          els.email().focus();
+          return;
+        }
+        const data = await downloadPdf();
+        const total = invoiceTotal(d.items);
+        const lines = [
+          `Dear ${d.clientName || 'customer'},`,
+          '',
+          `Please find attached invoice ${d.number} dated ${formatDateUK(d.dateISO)}.`,
+          '',
+          `Total due: ${formatGBP(total)}`,
+          '',
+          'Payment details:',
+          inv.bank.name,
+          `Sort code ${inv.bank.sortCode}`,
+          `Account number ${inv.bank.accountNumber}`,
+          '',
+          inv.terms,
+          '',
+          inv.signOff,
+          inv.signatory,
+          inv.tradingName,
+        ].join('\n');
+        const mailto = `mailto:${encodeURIComponent(d.clientEmail)}?subject=${encodeURIComponent(
+          `Invoice ${d.number} from ${inv.tradingName}`
+        )}&body=${encodeURIComponent(lines)}`;
+        window.location.href = mailto;
+        note.textContent = 'PDF downloaded and your email opened. Attach the PDF, then send.';
+        note.classList.remove('hidden');
+      }
+
+      // ---------- Wire up ----------
+      function addRow(r?: Row) {
+        const i = els.rows().querySelectorAll('.row').length;
+        els.rows().insertAdjacentHTML('beforeend', rowHtml(r || { productType: '', description: '', unit: '', price: '' }, i));
+        bindRow(els.rows().lastElementChild as HTMLElement);
+        renderPreview();
+      }
+      function bindRow(el: HTMLElement) {
+        el.querySelectorAll('input,textarea').forEach((inp) =>
+          inp.addEventListener('input', () => { renderPreview(); saveDraft(); })
+        );
+        el.querySelector('.del-row')!.addEventListener('click', () => {
+          el.remove();
+          renderPreview();
+          saveDraft();
+        });
+      }
+
+      function loadDraft() {
+        const raw = localStorage.getItem(DRAFT);
+        if (!raw) return false;
+        try {
+          const d = JSON.parse(raw);
+          els.number().value = d.number || genNumber();
+          els.date().value = d.dateISO || todayISO();
+          els.client().value = d.clientName || '';
+          els.address().value = d.clientAddress || '';
+          els.email().value = d.clientEmail || '';
+          els.notes().value = d.notes || '';
+          els.rows().innerHTML = '';
+          (d._rows && d._rows.length ? d._rows : [{ productType: '', description: '', unit: '', price: '' }]).forEach((r: Row) => addRow(r));
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      function freshInvoice(commit: boolean) {
+        if (commit) localStorage.setItem(SEQ, String(nextSeq())); // advance the counter
+        localStorage.removeItem(DRAFT);
+        els.number().value = genNumber();
+        els.date().value = todayISO();
+        els.client().value = '';
+        els.address().value = '';
+        els.email().value = '';
+        els.notes().value = '';
+        els.rows().innerHTML = '';
+        addRow();
+        addRow();
+        renderPreview();
+      }
+
+      let inited = false;
+      function init() {
+        if (inited) return;
+        inited = true;
+        [els.number(), els.date(), els.client(), els.address(), els.email(), els.notes()].forEach((el) =>
+          el.addEventListener('input', () => { renderPreview(); saveDraft(); })
+        );
+        document.getElementById('add-row')!.addEventListener('click', () => { addRow(); saveDraft(); });
+        document.getElementById('btn-pdf')!.addEventListener('click', () => downloadPdf());
+        document.getElementById('btn-print')!.addEventListener('click', () => window.print());
+        document.getElementById('btn-send')!.addEventListener('click', () => sendToClient());
+        document.getElementById('btn-new')!.addEventListener('click', () => {
+          if (confirm('Start a new blank invoice? The current draft will be cleared.')) freshInvoice(true);
+        });
+
+        if (!loadDraft()) freshInvoice(false);
+        renderPreview();
+      }
+
+      // Helpers
+      function escapeHtml(s: string) {
+        return (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+      }
+      function escapeAttr(s: string) {
+        return escapeHtml(s).replace(/"/g, '&quot;');
+      }
+
+      // If already unlocked on load, init immediately.
+      if (sessionStorage.getItem('uds_admin_ok') === '1') init();
+    </script>
+  </body>
+</html>

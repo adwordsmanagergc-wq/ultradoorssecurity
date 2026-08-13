@@ -139,3 +139,29 @@ astro.config.mjs  tailwind.config.mjs  netlify.toml
 Single canonical email, one consistent "15+ years" experience figure, no
 "lorem ipsum", no 50%-off summer-sale banner, and clean social placeholders in
 place of the old dead links.
+
+## Owner invoicing tool (/admin/invoice)
+
+A private, owner-only invoice builder. It is `noindex`, blocked in robots.txt
+and kept out of the sitemap, and reachable from the small "Staff" link in the
+footer.
+
+- **Login:** a passcode (no email/password). Set it in `src/data/site.ts`
+  under `invoice.passcode`, or via `PUBLIC_INVOICE_PASSCODE` in your Vercel
+  env. Note this is a light gate checked in the browser, so keep the URL
+  private; the tool only builds invoices locally, it stores and sends nothing
+  on its own.
+- **Fill in only:** client name, address, client email (for sending), and the
+  product rows (Product Type, Description, Unit, Price). Everything else is
+  automatic: invoice number, date, your business details, bank details and the
+  total (the sum of the Price column, matching your current invoices).
+- **Preview** updates live as you type.
+- **Download PDF** produces a modern branded PDF; **Print** saves via the
+  browser; **Send to client** opens your email app with the client's address,
+  subject and a message pre-filled, and downloads the PDF to attach.
+- Business/bank details, sign-off and VAT setting live in `site.ts` under
+  `invoice` — edit once and every invoice updates. (VAT is off; flip
+  `vatRegistered` to true and set `vatNumber` if that changes.)
+
+Invoice numbers auto-increment and drafts are saved in the browser's local
+storage on the owner's device.
