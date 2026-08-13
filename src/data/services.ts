@@ -1,8 +1,7 @@
 /**
  * Services shown in the home "Services" grid.
- * `image` points at a file in /public/images/ (see portfolio.ts manifest).
- * `slug` is used for the anchor/id only (single-page site — no per-service
- * routes yet).
+ * `image` points at a real photo in /public/images/.
+ * `category` is the matching gallery filter on the portfolio page.
  */
 export interface Service {
   slug: string;
@@ -10,7 +9,6 @@ export interface Service {
   description: string;
   image: string;
   alt: string;
-  /** Gallery category this service links to on the portfolio page. */
   category: string;
   /** Emergency services get the red accent + emergency phone. */
   emergency?: boolean;
@@ -22,8 +20,8 @@ export const services: Service[] = [
     title: 'Security Doors',
     description:
       'High security doors designed to protect your home or business with style.',
-    image: '/images/windows-doors-thumb.jpg',
-    alt: 'Bespoke steel security door installed by Ultra Doors Security',
+    image: '/images/composit-door.jpg',
+    alt: 'Grey composite security door with glazed side panels',
     category: 'Security Doors',
   },
   {
@@ -31,8 +29,8 @@ export const services: Service[] = [
     title: 'Roller Shutters',
     description:
       'Manual or electric roller shutters for windows, doors and commercial premises.',
-    image: '/images/gates.jpg',
-    alt: 'Commercial roller shutter fitted to a shop front',
+    image: '/images/Roller-shutter-image.jpg',
+    alt: 'White electric roller shutter fitted to a garage',
     category: 'Roller Shutters',
   },
   {
@@ -41,7 +39,7 @@ export const services: Service[] = [
     description:
       'Durable industrial doors built for performance, safety and reliability.',
     image: '/images/commercial-thumb.jpg',
-    alt: 'Industrial door installed on a commercial unit',
+    alt: 'Commercial roller shutter door on an industrial unit',
     category: 'Industrial Doors',
   },
   {
@@ -50,15 +48,15 @@ export const services: Service[] = [
     description:
       'Aluminium shop fronts, glazing and bespoke fabrication services.',
     image: '/images/windows-doors-thumb.jpg',
-    alt: 'Aluminium shop front and glazing by Ultra Doors Security',
-    category: 'Shop Fronts',
+    alt: 'Home fitted with new white uPVC windows and French doors',
+    category: 'Shop Fronts & Glazing',
   },
   {
     slug: 'security-gates',
     title: 'Security Gates',
     description: 'Bespoke security gates for homes and commercial premises.',
-    image: '/images/security-gates-thumb.jpg',
-    alt: 'Bespoke security gate fitted to a property entrance',
+    image: '/images/gates.jpg',
+    alt: 'Bespoke wrought iron driveway security gates',
     category: 'Security Gates',
   },
   {
@@ -66,8 +64,8 @@ export const services: Service[] = [
     title: 'Emergency Repairs',
     description:
       '24/7 emergency call out for doors, shutters and glazing — including boarding up and same-day glass replacement.',
-    image: '/images/security-gates-thumb.jpg',
-    alt: 'Ultra Doors Security 24/7 emergency repair and boarding up service',
+    image: '/images/broken-glass-door.jpg',
+    alt: 'Smashed glazed door awaiting emergency glass replacement',
     category: 'All',
     emergency: true,
   },
