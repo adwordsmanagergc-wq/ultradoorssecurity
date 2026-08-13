@@ -175,8 +175,24 @@ const inv = site.invoice;
             </div>
           </div>
 
+          <!-- Period filter (great for tax-year totals) -->
+          <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
+            <div class="flex flex-wrap items-end gap-2">
+              <div class="flex flex-wrap gap-1">
+                <button data-period="all" class="periodbtn rounded-lg px-3 py-1.5 text-sm font-semibold">All time</button>
+                <button data-period="tax-this" class="periodbtn rounded-lg px-3 py-1.5 text-sm font-semibold">This tax year</button>
+                <button data-period="tax-last" class="periodbtn rounded-lg px-3 py-1.5 text-sm font-semibold">Last tax year</button>
+                <button data-period="month-this" class="periodbtn rounded-lg px-3 py-1.5 text-sm font-semibold">This month</button>
+              </div>
+              <label class="text-xs font-semibold text-[#5b6b7f]">From <input id="rec-from" type="date" class="ml-1 rounded-lg border border-muted px-2 py-1.5 text-sm focus:border-accent focus:outline-none" /></label>
+              <label class="text-xs font-semibold text-[#5b6b7f]">To <input id="rec-to" type="date" class="ml-1 rounded-lg border border-muted px-2 py-1.5 text-sm focus:border-accent focus:outline-none" /></label>
+            </div>
+            <button id="rec-csv" class="rounded-lg bg-navy px-3 py-2 text-sm font-bold text-white hover:bg-ink">Export CSV</button>
+          </div>
+          <p id="rec-period-count" class="mt-1 text-xs text-[#5b6b7f]"></p>
+
           <!-- Summary cards -->
-          <div id="rec-summary" class="mt-5 grid gap-3 sm:grid-cols-3"></div>
+          <div id="rec-summary" class="mt-3 grid gap-3 sm:grid-cols-3"></div>
 
           <!-- Breakdown by year / month -->
           <div class="mt-6 grid gap-6 lg:grid-cols-2">
@@ -214,6 +230,8 @@ const inv = site.invoice;
       .tabbtn[aria-selected='true'] { background: var(--navy); color: #fff; border-color: var(--navy); }
       .screenbtn { color: #5b6b7f; transition: all 0.15s; }
       .screenbtn[aria-selected='true'] { background: #fff; color: var(--navy); box-shadow: 0 1px 2px rgba(2, 13, 26, 0.1); }
+      .periodbtn { border: 1px solid var(--muted); background: #fff; color: var(--navy); }
+      .periodbtn[aria-selected='true'] { background: var(--navy); color: #fff; border-color: var(--navy); }
 
       @media print {
         body { background: #fff; }
@@ -511,8 +529,8 @@ const inv = site.invoice;
         return logoDataUrl;
       }
 
-      async function buildPdf() {
-        const d = currentData();
+      async function buildPdf(dataArg?: any) {
+        const d = dataArg || currentData();
         const total = invoiceTotal(d.items);
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
         const W = 210;
@@ -668,6 +686,15 @@ const inv = site.invoice;
         doc.save(fileName(data));
         await saveRecord(data);
         return data;
+      }
+
+      // Re-download the PDF of a saved record without touching the builder form.
+      async function downloadRecordPdf(number: string) {
+        const rec = recordsCache.find((r) => r.number === number);
+        if (!rec) return;
+        const data = { number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, clientAddress: rec.clientAddress, clientEmail: rec.email, items: rec.items, notes: rec.notes };
+        const { doc } = await buildPdf(data);
+        doc.save(fileName(data));
       }
 
       // ---------- Send ----------
@@ -888,12 +915,100 @@ const inv = site.invoice;
         return `${MONTHS[parseInt(m, 10) - 1]} ${y}`;
       }
 
+      // ---------- Period filter (UK tax year aware) ----------
+      const recPeriod = { preset: 'all', from: '', to: '' };
+
+      function periodBounds() {
+        const p = recPeriod;
+        if (p.preset === 'custom') return { from: p.from || '', to: p.to || '' };
+        if (p.preset === 'all') return { from: '', to: '' };
+        const now = new Date();
+        const y = now.getFullYear();
+        const taxStart = (yr: number) => `${yr}-04-06`;
+        const taxEnd = (yr: number) => `${yr + 1}-04-05`;
+        const afterApr6 = now.getMonth() > 3 || (now.getMonth() === 3 && now.getDate() >= 6);
+        const curTaxStartYear = afterApr6 ? y : y - 1;
+        if (p.preset === 'tax-this') return { from: taxStart(curTaxStartYear), to: taxEnd(curTaxStartYear) };
+        if (p.preset === 'tax-last') return { from: taxStart(curTaxStartYear - 1), to: taxEnd(curTaxStartYear - 1) };
+        if (p.preset === 'month-this') {
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+          return { from: `${y}-${mm}-01`, to: `${y}-${mm}-${String(lastDay).padStart(2, '0')}` };
+        }
+        return { from: '', to: '' };
+      }
+      function inBounds(dateISO: string, b: { from: string; to: string }) {
+        if (!b.from && !b.to) return true;
+        if (!dateISO) return false;
+        if (b.from && dateISO < b.from) return false;
+        if (b.to && dateISO > b.to) return false;
+        return true;
+      }
+      function periodFiltered() {
+        const b = periodBounds();
+        return recordsCache.filter((r) => inBounds(r.dateISO, b));
+      }
+      function listFiltered() {
+        const q = recFilter.q.trim().toLowerCase();
+        let recs = periodFiltered();
+        if (recFilter.status !== 'all') recs = recs.filter((r) => (r.status || 'sent') === recFilter.status);
+        if (q) recs = recs.filter((r) => (r.clientName || '').toLowerCase().includes(q) || (r.number || '').toLowerCase().includes(q));
+        return recs.sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
+      }
+      function periodLabel() {
+        const map: Record<string, string> = { all: 'All time', 'tax-this': 'This tax year', 'tax-last': 'Last tax year', 'month-this': 'This month', custom: 'Selected dates' };
+        return map[recPeriod.preset] || 'All time';
+      }
+
+      function exportCsv() {
+        const recs = listFiltered();
+        const esc = (v: any) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const header = ['Invoice', 'Date', 'Client', 'Amount', 'Status', 'Paid date', 'Email'];
+        const body = recs.map((r) => [r.number, formatDateUK(r.dateISO), r.clientName || '', (Number(r.total) || 0).toFixed(2), r.status === 'paid' ? 'Paid' : 'Unpaid', r.paidDateISO ? formatDateUK(r.paidDateISO) : '', r.email || ''].map(esc).join(','));
+        const invoiced = recs.reduce((s, r) => s + (r.total || 0), 0);
+        const paid = recs.filter((r) => r.status === 'paid').reduce((s, r) => s + (r.total || 0), 0);
+        const totals = [
+          '',
+          ['Invoiced', '', '', invoiced.toFixed(2), '', '', ''].map(esc).join(','),
+          ['Paid', '', '', paid.toFixed(2), '', '', ''].map(esc).join(','),
+          ['Outstanding', '', '', (invoiced - paid).toFixed(2), '', '', ''].map(esc).join(','),
+        ];
+        const csv = [header.map(esc).join(','), ...body, ...totals].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ultra-doors-invoices-${recPeriod.preset}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function setPeriod(preset: string) {
+        recPeriod.preset = preset;
+        if (preset !== 'custom') {
+          const b = periodBounds();
+          (document.getElementById('rec-from') as HTMLInputElement).value = b.from;
+          (document.getElementById('rec-to') as HTMLInputElement).value = b.to;
+        }
+        document.querySelectorAll('.periodbtn').forEach((el) => el.setAttribute('aria-selected', String((el as HTMLElement).dataset.period === preset)));
+        renderRecords();
+      }
+      function onCustomDates() {
+        recPeriod.preset = 'custom';
+        recPeriod.from = (document.getElementById('rec-from') as HTMLInputElement).value;
+        recPeriod.to = (document.getElementById('rec-to') as HTMLInputElement).value;
+        document.querySelectorAll('.periodbtn').forEach((el) => el.setAttribute('aria-selected', 'false'));
+        renderRecords();
+      }
+
       function renderRecords() {
         const status = document.getElementById('rec-status');
         if (status) status.textContent = cloudMode ? 'Cloud sync on. Synced across your devices.' : (supabase ? 'On this device only. Log in with your Supabase passcode to sync.' : 'Saved on this device.');
-        const recs = recordsCache.slice().sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
-        const invoiced = recs.reduce((s, r) => s + (r.total || 0), 0);
-        const paid = recs.filter((r) => r.status === 'paid').reduce((s, r) => s + (r.total || 0), 0);
+        // All-time breakdown tables use every record; the summary reflects the period.
+        const allRecs = recordsCache.slice();
+        const pRecs = periodFiltered();
+        const invoiced = pRecs.reduce((s, r) => s + (r.total || 0), 0);
+        const paid = pRecs.filter((r) => r.status === 'paid').reduce((s, r) => s + (r.total || 0), 0);
         const outstanding = invoiced - paid;
 
         const summary = document.getElementById('rec-summary');
@@ -901,12 +1016,14 @@ const inv = site.invoice;
           const card = (label: string, value: string, color: string) =>
             `<div class="rounded-2xl bg-white p-5 shadow-card"><div class="text-sm font-semibold text-[#5b6b7f]">${label}</div><div class="mt-1 text-3xl font-extrabold" style="color:${color}">${value}</div></div>`;
           summary.innerHTML =
-            card('Invoiced', formatGBP(invoiced), '#152437') +
+            card(`Invoiced (${periodLabel()})`, formatGBP(invoiced), '#152437') +
             card('Paid', formatGBP(paid), '#16a34a') +
             card('Outstanding', formatGBP(outstanding), '#e11d2a');
         }
+        const periodCount = document.getElementById('rec-period-count');
+        if (periodCount) periodCount.textContent = `${pRecs.length} invoice${pRecs.length === 1 ? '' : 's'} in ${periodLabel().toLowerCase()}`;
 
-        const years = groupTotals(recs, (r) => (r.dateISO || '').slice(0, 4));
+        const years = groupTotals(allRecs, (r) => (r.dateISO || '').slice(0, 4));
         const yearsEl = document.getElementById('rec-years');
         if (yearsEl) {
           const rows = Object.keys(years).sort().reverse().map((y) => {
@@ -916,7 +1033,7 @@ const inv = site.invoice;
           yearsEl.innerHTML = rows ? recTable(rows, ['Year', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
         }
 
-        const months = groupTotals(recs, (r) => (r.dateISO || '').slice(0, 7));
+        const months = groupTotals(allRecs, (r) => (r.dateISO || '').slice(0, 7));
         const monthsEl = document.getElementById('rec-months');
         if (monthsEl) {
           const rows = Object.keys(months).sort().reverse().slice(0, 12).map((k) => {
@@ -942,17 +1059,14 @@ const inv = site.invoice;
       function renderRecordsList() {
         const listEl = document.getElementById('rec-list');
         if (!listEl) return;
-        const q = recFilter.q.trim().toLowerCase();
-        let recs = recordsCache.slice().sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
-        if (recFilter.status !== 'all') recs = recs.filter((r) => (r.status || 'sent') === recFilter.status);
-        if (q) recs = recs.filter((r) => (r.clientName || '').toLowerCase().includes(q) || (r.number || '').toLowerCase().includes(q));
+        const recs = listFiltered();
 
         if (!recordsCache.length) {
           listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices saved yet. Download or send an invoice and it will appear here.</p>';
           return;
         }
         if (!recs.length) {
-          listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices match your search.</p>';
+          listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices match this period or search.</p>';
           return;
         }
         const rows = recs.map((r) => {
@@ -969,6 +1083,7 @@ const inv = site.invoice;
             <td style="padding:9px 10px;text-align:right;white-space:nowrap;font-weight:700;">${formatGBP(r.total)}</td>
             <td style="padding:9px 10px;text-align:center;">${badge}</td>
             <td style="padding:9px 10px;text-align:right;white-space:nowrap;">
+              <button data-pdf="${r.number}" style="color:#152437;font-weight:700;">PDF</button> &nbsp;
               <button data-open="${r.number}" style="color:#1863dc;font-weight:700;">Open</button> &nbsp;
               <button data-copy="${r.number}" style="color:#1863dc;font-weight:600;">Copy</button> &nbsp;
               ${toggle} &nbsp;
@@ -982,6 +1097,7 @@ const inv = site.invoice;
         listEl.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => deleteRecord((b as HTMLElement).dataset.del!)));
         listEl.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openRecord((b as HTMLElement).dataset.open!, false)));
         listEl.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => openRecord((b as HTMLElement).dataset.copy!, true)));
+        listEl.querySelectorAll('[data-pdf]').forEach((b) => b.addEventListener('click', () => downloadRecordPdf((b as HTMLElement).dataset.pdf!)));
       }
 
       // Reopen a saved invoice into the builder. duplicate=true gives it a new number.
@@ -1078,6 +1194,11 @@ const inv = site.invoice;
         document.getElementById('rec-sync')!.addEventListener('click', () => pushLocalToCloud());
         document.getElementById('rec-search')!.addEventListener('input', (e) => { recFilter.q = (e.target as HTMLInputElement).value; renderRecordsList(); });
         document.getElementById('rec-filter-status')!.addEventListener('change', (e) => { recFilter.status = (e.target as HTMLSelectElement).value; renderRecordsList(); });
+        document.querySelectorAll('.periodbtn').forEach((b) => b.addEventListener('click', () => setPeriod((b as HTMLElement).dataset.period!)));
+        document.getElementById('rec-from')!.addEventListener('change', onCustomDates);
+        document.getElementById('rec-to')!.addEventListener('change', onCustomDates);
+        document.getElementById('rec-csv')!.addEventListener('click', () => exportCsv());
+        setPeriod('all');
 
         // Re-fit the preview whenever its container changes size, including
         // when the Preview tab first becomes visible on mobile (0 -> width).
