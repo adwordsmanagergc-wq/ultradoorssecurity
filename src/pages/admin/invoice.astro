@@ -192,7 +192,17 @@ const inv = site.invoice;
 
           <!-- Invoice list -->
           <div class="mt-6 rounded-2xl bg-white p-5 shadow-card">
-            <h3 class="font-bold">All invoices</h3>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h3 class="font-bold">All invoices</h3>
+              <div class="flex flex-wrap gap-2">
+                <input id="rec-search" type="search" placeholder="Search client or number" class="rounded-lg border border-muted px-3 py-2 text-sm focus:border-accent focus:outline-none" />
+                <select id="rec-filter-status" class="rounded-lg border border-muted px-3 py-2 text-sm focus:border-accent focus:outline-none">
+                  <option value="all">All statuses</option>
+                  <option value="sent">Unpaid</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+            </div>
             <div id="rec-list" class="mt-3 overflow-x-auto"></div>
           </div>
         </main>
@@ -778,18 +788,27 @@ const inv = site.invoice;
 
       function localUpsert(rec: any) {
         const arr = localRecords();
+        const fields = { number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, clientAddress: rec.clientAddress, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes };
         const i = arr.findIndex((r) => r.number === rec.number);
-        if (i >= 0) arr[i] = { ...arr[i], number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes };
-        else arr.push({ number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes, status: 'sent', paidDateISO: '' });
+        if (i >= 0) arr[i] = { ...arr[i], ...fields };
+        else arr.push({ ...fields, status: 'sent', paidDateISO: '' });
         setLocalRecords(arr);
       }
 
+      // The address is packed into the jsonb `items` column as { lines, address }
+      // so we can restore a full invoice with no database schema change.
       function dbToApp(r: any) {
-        return { number: r.number, dateISO: r.date || '', clientName: r.client_name || '', email: r.email || '', total: Number(r.total) || 0, status: r.status || 'sent', paidDateISO: r.paid_date || '', items: r.items || [], notes: r.notes || '' };
+        const bundle = r.items;
+        const lines = Array.isArray(bundle) ? bundle : bundle && bundle.lines ? bundle.lines : [];
+        const address = bundle && !Array.isArray(bundle) && bundle.address ? bundle.address : '';
+        return { number: r.number, dateISO: r.date || '', clientName: r.client_name || '', clientAddress: address, email: r.email || '', total: Number(r.total) || 0, status: r.status || 'sent', paidDateISO: r.paid_date || '', items: lines, notes: r.notes || '' };
+      }
+      function packItems(rec: any) {
+        return { lines: rec.items || [], address: rec.clientAddress || '' };
       }
 
       async function insertMissing(rec: any) {
-        const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: rec.items || null, notes: rec.notes || null, status: rec.status || 'sent', paid_date: rec.paidDateISO || null };
+        const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: packItems(rec), notes: rec.notes || null, status: rec.status || 'sent', paid_date: rec.paidDateISO || null };
         await supabase!.from('invoices').insert(base);
       }
 
@@ -815,12 +834,12 @@ const inv = site.invoice;
       }
 
       async function saveRecord(d: any) {
-        const rec = { number: d.number, dateISO: d.dateISO, clientName: d.clientName, email: d.clientEmail, total: invoiceTotal(d.items), items: d.items, notes: d.notes };
+        const rec = { number: d.number, dateISO: d.dateISO, clientName: d.clientName, clientAddress: d.clientAddress, email: d.clientEmail, total: invoiceTotal(d.items), items: d.items, notes: d.notes };
         localUpsert(rec);
         markUsed(d.number);
         if (cloudMode && supabase) {
           try {
-            const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes };
+            const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: packItems(rec), notes: rec.notes };
             const { data: ex } = await supabase.from('invoices').select('id').eq('number', rec.number).maybeSingle();
             if (ex) await supabase.from('invoices').update(base).eq('id', ex.id);
             else await supabase.from('invoices').insert({ ...base, status: 'sent', paid_date: null });
@@ -887,12 +906,6 @@ const inv = site.invoice;
             card('Outstanding', formatGBP(outstanding), '#e11d2a');
         }
 
-        const tbl = (rows: string, headers: string[]) =>
-          `<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:340px;">
-            <thead><tr style="text-align:left;color:#5b6b7f;border-bottom:2px solid #e7edf4;">
-              ${headers.map((h, i) => `<th style="padding:8px 10px;${i ? 'text-align:right;' : ''}">${h}</th>`).join('')}
-            </tr></thead><tbody>${rows}</tbody></table>`;
-
         const years = groupTotals(recs, (r) => (r.dateISO || '').slice(0, 4));
         const yearsEl = document.getElementById('rec-years');
         if (yearsEl) {
@@ -900,7 +913,7 @@ const inv = site.invoice;
             const g = years[y];
             return `<tr style="border-bottom:1px solid #f0f3f7;"><td style="padding:8px 10px;font-weight:700;">${y}</td><td style="padding:8px 10px;text-align:right;">${formatGBP(g.invoiced)}</td><td style="padding:8px 10px;text-align:right;color:#16a34a;">${formatGBP(g.paid)}</td><td style="padding:8px 10px;text-align:right;color:#e11d2a;">${formatGBP(g.invoiced - g.paid)}</td></tr>`;
           }).join('');
-          yearsEl.innerHTML = rows ? tbl(rows, ['Year', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
+          yearsEl.innerHTML = rows ? recTable(rows, ['Year', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
         }
 
         const months = groupTotals(recs, (r) => (r.dateISO || '').slice(0, 7));
@@ -910,36 +923,85 @@ const inv = site.invoice;
             const g = months[k];
             return `<tr style="border-bottom:1px solid #f0f3f7;"><td style="padding:8px 10px;font-weight:700;">${monthLabel(k)}</td><td style="padding:8px 10px;text-align:right;">${formatGBP(g.invoiced)}</td><td style="padding:8px 10px;text-align:right;color:#16a34a;">${formatGBP(g.paid)}</td><td style="padding:8px 10px;text-align:right;color:#e11d2a;">${formatGBP(g.invoiced - g.paid)}</td></tr>`;
           }).join('');
-          monthsEl.innerHTML = rows ? tbl(rows, ['Month', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
+          monthsEl.innerHTML = rows ? recTable(rows, ['Month', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
         }
 
+        renderRecordsList();
+      }
+
+      function recTable(rows: string, headers: string[]) {
+        return `<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:340px;">
+            <thead><tr style="text-align:left;color:#5b6b7f;border-bottom:2px solid #e7edf4;">
+              ${headers.map((h, i) => `<th style="padding:8px 10px;${i ? 'text-align:right;' : ''}">${h}</th>`).join('')}
+            </tr></thead><tbody>${rows}</tbody></table>`;
+      }
+
+      // Filter state for the invoice list (search + status).
+      const recFilter = { q: '', status: 'all' };
+
+      function renderRecordsList() {
         const listEl = document.getElementById('rec-list');
-        if (listEl) {
-          if (!recs.length) {
-            listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices saved yet. Download or send an invoice and it will appear here.</p>';
-          } else {
-            const rows = recs.map((r) => {
-              const badge = r.status === 'paid'
-                ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Paid</span>'
-                : '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Unpaid</span>';
-              const toggle = r.status === 'paid'
-                ? `<button data-unpaid="${r.number}" style="color:#5b6b7f;font-weight:600;">Mark unpaid</button>`
-                : `<button data-paid="${r.number}" style="color:#16a34a;font-weight:700;">Mark paid</button>`;
-              return `<tr style="border-bottom:1px solid #f0f3f7;">
-                <td style="padding:9px 10px;white-space:nowrap;">${formatDateUK(r.dateISO)}</td>
-                <td style="padding:9px 10px;font-weight:700;white-space:nowrap;">${escapeHtml(r.number)}</td>
-                <td style="padding:9px 10px;">${escapeHtml(r.clientName || '')}</td>
-                <td style="padding:9px 10px;text-align:right;white-space:nowrap;font-weight:700;">${formatGBP(r.total)}</td>
-                <td style="padding:9px 10px;text-align:center;">${badge}</td>
-                <td style="padding:9px 10px;text-align:right;white-space:nowrap;">${toggle} &nbsp; <button data-del="${r.number}" style="color:#e11d2a;font-weight:600;">Delete</button></td>
-              </tr>`;
-            }).join('');
-            listEl.innerHTML = tbl(rows, ['Date', 'Invoice', 'Client', 'Amount', 'Status', '']);
-            listEl.querySelectorAll('[data-paid]').forEach((b) => b.addEventListener('click', () => setPaid((b as HTMLElement).dataset.paid!, true)));
-            listEl.querySelectorAll('[data-unpaid]').forEach((b) => b.addEventListener('click', () => setPaid((b as HTMLElement).dataset.unpaid!, false)));
-            listEl.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => deleteRecord((b as HTMLElement).dataset.del!)));
-          }
+        if (!listEl) return;
+        const q = recFilter.q.trim().toLowerCase();
+        let recs = recordsCache.slice().sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
+        if (recFilter.status !== 'all') recs = recs.filter((r) => (r.status || 'sent') === recFilter.status);
+        if (q) recs = recs.filter((r) => (r.clientName || '').toLowerCase().includes(q) || (r.number || '').toLowerCase().includes(q));
+
+        if (!recordsCache.length) {
+          listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices saved yet. Download or send an invoice and it will appear here.</p>';
+          return;
         }
+        if (!recs.length) {
+          listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices match your search.</p>';
+          return;
+        }
+        const rows = recs.map((r) => {
+          const badge = r.status === 'paid'
+            ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Paid</span>'
+            : '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Unpaid</span>';
+          const toggle = r.status === 'paid'
+            ? `<button data-unpaid="${r.number}" style="color:#5b6b7f;font-weight:600;">Unpaid</button>`
+            : `<button data-paid="${r.number}" style="color:#16a34a;font-weight:700;">Paid</button>`;
+          return `<tr style="border-bottom:1px solid #f0f3f7;">
+            <td style="padding:9px 10px;white-space:nowrap;">${formatDateUK(r.dateISO)}</td>
+            <td style="padding:9px 10px;font-weight:700;white-space:nowrap;">${escapeHtml(r.number)}</td>
+            <td style="padding:9px 10px;">${escapeHtml(r.clientName || '')}</td>
+            <td style="padding:9px 10px;text-align:right;white-space:nowrap;font-weight:700;">${formatGBP(r.total)}</td>
+            <td style="padding:9px 10px;text-align:center;">${badge}</td>
+            <td style="padding:9px 10px;text-align:right;white-space:nowrap;">
+              <button data-open="${r.number}" style="color:#1863dc;font-weight:700;">Open</button> &nbsp;
+              <button data-copy="${r.number}" style="color:#1863dc;font-weight:600;">Copy</button> &nbsp;
+              ${toggle} &nbsp;
+              <button data-del="${r.number}" style="color:#e11d2a;font-weight:600;">Delete</button>
+            </td>
+          </tr>`;
+        }).join('');
+        listEl.innerHTML = recTable(rows, ['Date', 'Invoice', 'Client', 'Amount', 'Status', '']);
+        listEl.querySelectorAll('[data-paid]').forEach((b) => b.addEventListener('click', () => setPaid((b as HTMLElement).dataset.paid!, true)));
+        listEl.querySelectorAll('[data-unpaid]').forEach((b) => b.addEventListener('click', () => setPaid((b as HTMLElement).dataset.unpaid!, false)));
+        listEl.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => deleteRecord((b as HTMLElement).dataset.del!)));
+        listEl.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openRecord((b as HTMLElement).dataset.open!, false)));
+        listEl.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => openRecord((b as HTMLElement).dataset.copy!, true)));
+      }
+
+      // Reopen a saved invoice into the builder. duplicate=true gives it a new number.
+      function openRecord(number: string, duplicate: boolean) {
+        const rec = recordsCache.find((r) => r.number === number);
+        if (!rec) return;
+        els.number().value = duplicate ? genNumber() : rec.number;
+        els.date().value = duplicate ? todayISO() : rec.dateISO || todayISO();
+        els.client().value = rec.clientName || '';
+        els.address().value = rec.clientAddress || '';
+        els.email().value = rec.email || '';
+        els.notes().value = rec.notes || '';
+        els.rows().innerHTML = '';
+        const lines = rec.items && rec.items.length ? rec.items : [{}];
+        lines.forEach((it: any) => addRow({ productType: it.productType || '', description: it.description || '', unit: it.unit != null ? String(it.unit) : '', price: it.price != null ? String(it.price) : '' }));
+        saveDraft();
+        renderPreview();
+        switchScreen('builder');
+        switchTab('edit');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       // ---------- Screen + tab switching ----------
@@ -1014,6 +1076,8 @@ const inv = site.invoice;
           if (f) importRecords(f);
         });
         document.getElementById('rec-sync')!.addEventListener('click', () => pushLocalToCloud());
+        document.getElementById('rec-search')!.addEventListener('input', (e) => { recFilter.q = (e.target as HTMLInputElement).value; renderRecordsList(); });
+        document.getElementById('rec-filter-status')!.addEventListener('change', (e) => { recFilter.status = (e.target as HTMLSelectElement).value; renderRecordsList(); });
 
         // Re-fit the preview whenever its container changes size, including
         // when the Preview tab first becomes visible on mobile (0 -> width).
