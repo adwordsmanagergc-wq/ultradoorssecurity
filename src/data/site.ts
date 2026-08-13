@@ -84,6 +84,17 @@ export const site = {
     vatNumber: '',
     // Invoice number format: PREFIX-YYYY-NNN (NNN auto-increments locally).
     numberPrefix: 'UDS',
+
+    // Supabase backend for cloud-synced invoice records (safe to commit:
+    // the URL + publishable key are public by design and the database is
+    // protected by Row Level Security). Override via PUBLIC_SUPABASE_URL /
+    // PUBLIC_SUPABASE_ANON_KEY / PUBLIC_INVOICE_OWNER_EMAIL if you rotate keys.
+    // Leave url/anonKey blank to disable cloud sync and use on-device storage.
+    supabase: {
+      url: 'https://rrivtgwhjebwmvxwbwof.supabase.co',
+      anonKey: 'sb_publishable_ml23dP8lWaRaS7nLG6hahw_j4Nm9WUv',
+      ownerEmail: 'info@ultradoorssecurity.co.uk',
+    },
   },
 } as const;
 

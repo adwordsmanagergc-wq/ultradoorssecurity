@@ -163,9 +163,13 @@ const inv = site.invoice;
       <div id="records-screen" class="hidden">
         <main class="mx-auto max-w-content px-4 pb-16 pt-6 lg:pt-8">
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-xl font-extrabold">Invoices &amp; payments</h2>
-            <div class="flex gap-2">
-              <button id="rec-export" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Back up (export)</button>
+            <div>
+              <h2 class="text-xl font-extrabold">Invoices &amp; payments</h2>
+              <p id="rec-status" class="mt-0.5 text-sm text-[#5b6b7f]"></p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="rec-sync" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Sync device → cloud</button>
+              <button id="rec-export" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Back up</button>
               <button id="rec-import" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Restore</button>
               <input id="rec-file" type="file" accept="application/json" class="hidden" />
             </div>
@@ -217,6 +221,7 @@ const inv = site.invoice;
       import { site } from '../../data/site';
       import { jsPDF } from 'jspdf';
       import autoTable from 'jspdf-autotable';
+      import { createClient } from '@supabase/supabase-js';
       import {
         invoiceTotal,
         lineAmount,
@@ -230,6 +235,14 @@ const inv = site.invoice;
       const PASSCODE =
         (import.meta.env.PUBLIC_INVOICE_PASSCODE as string) || inv.passcode;
 
+      // Supabase (cloud-synced records). Falls back to on-device storage when
+      // not configured or when signed in with the local passcode.
+      const SB_URL = (import.meta.env.PUBLIC_SUPABASE_URL as string) || inv.supabase.url;
+      const SB_KEY = (import.meta.env.PUBLIC_SUPABASE_ANON_KEY as string) || inv.supabase.anonKey;
+      const OWNER_EMAIL = (import.meta.env.PUBLIC_INVOICE_OWNER_EMAIL as string) || inv.supabase.ownerEmail;
+      const supabase = SB_URL && SB_KEY ? createClient(SB_URL, SB_KEY) : null;
+      let cloudMode = false;
+
       // ---------- Passcode gate ----------
       const gate = document.getElementById('gate')!;
       const app = document.getElementById('app')!;
@@ -237,22 +250,53 @@ const inv = site.invoice;
         gate.style.display = 'none';
         app.classList.remove('hidden');
       }
-      if (sessionStorage.getItem('uds_admin_ok') === '1') unlock();
-      document.getElementById('gate-form')!.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const code = (document.getElementById('gate-code') as HTMLInputElement).value.trim();
-        if (code === PASSCODE) {
-          sessionStorage.setItem('uds_admin_ok', '1');
-          unlock();
-          init();
-        } else {
-          document.getElementById('gate-error')!.classList.remove('hidden');
+      async function proceed() {
+        unlock();
+        init();
+        await loadRecords();
+      }
+      async function attemptLogin(code: string): Promise<boolean> {
+        // Try cloud auth first (passcode = the owner account's password).
+        if (supabase && OWNER_EMAIL) {
+          try {
+            const { error } = await supabase.auth.signInWithPassword({ email: OWNER_EMAIL, password: code });
+            if (!error) { cloudMode = true; sessionStorage.setItem('uds_admin_ok', '1'); await proceed(); return true; }
+          } catch {}
         }
+        // Fall back to the local passcode (offline, or before the cloud user exists).
+        if (code === PASSCODE) { cloudMode = false; sessionStorage.setItem('uds_admin_ok', '1'); await proceed(); return true; }
+        return false;
+      }
+
+      document.getElementById('gate-form')!.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('gate-code') as HTMLInputElement;
+        const btn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+        if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
+        const ok = await attemptLogin(input.value.trim());
+        if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
+        if (!ok) document.getElementById('gate-error')!.classList.remove('hidden');
       });
-      document.getElementById('logout')!.addEventListener('click', () => {
+
+      document.getElementById('logout')!.addEventListener('click', async () => {
         sessionStorage.removeItem('uds_admin_ok');
+        if (supabase) { try { await supabase.auth.signOut(); } catch {} }
         location.reload();
       });
+
+      // Auto-unlock if a cloud session or a local unlock already exists.
+      // The microtask tick defers this past the rest of the module so all the
+      // later const/function declarations (els, init, loadRecords…) are ready.
+      (async () => {
+        await Promise.resolve();
+        if (supabase) {
+          try {
+            const { data } = await supabase.auth.getSession();
+            if (data.session) { cloudMode = true; await proceed(); return; }
+          } catch {}
+        }
+        if (sessionStorage.getItem('uds_admin_ok') === '1') await proceed();
+      })();
 
       // ---------- State ----------
       type Row = { productType: string; description: string; unit: string; price: string };
@@ -612,7 +656,7 @@ const inv = site.invoice;
       async function downloadPdf() {
         const { doc, data } = await buildPdf();
         doc.save(fileName(data));
-        saveRecord(data);
+        await saveRecord(data);
         return data;
       }
 
@@ -723,36 +767,89 @@ const inv = site.invoice;
       }
 
       // ---------- Records (saved invoices + payments) ----------
-      function loadRecords(): any[] {
+      // Held in memory (recordsCache), mirrored to localStorage, and synced to
+      // Supabase when the owner is signed in to the cloud (cloudMode).
+      let recordsCache: any[] = [];
+
+      function localRecords(): any[] {
         try { return JSON.parse(localStorage.getItem(RECORDS) || '[]'); } catch { return []; }
       }
-      function saveRecords(a: any[]) { localStorage.setItem(RECORDS, JSON.stringify(a)); }
+      function setLocalRecords(a: any[]) { localStorage.setItem(RECORDS, JSON.stringify(a)); }
 
-      function saveRecord(d: any) {
-        const total = invoiceTotal(d.items);
-        const recs = loadRecords();
-        const i = recs.findIndex((r) => r.number === d.number);
-        const base = { number: d.number, dateISO: d.dateISO, clientName: d.clientName, email: d.clientEmail, total };
-        if (i >= 0) recs[i] = { ...recs[i], ...base };
-        else recs.push({ ...base, status: 'sent', paidDateISO: '' });
-        saveRecords(recs);
+      function localUpsert(rec: any) {
+        const arr = localRecords();
+        const i = arr.findIndex((r) => r.number === rec.number);
+        if (i >= 0) arr[i] = { ...arr[i], number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes };
+        else arr.push({ number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes, status: 'sent', paidDateISO: '' });
+        setLocalRecords(arr);
+      }
+
+      function dbToApp(r: any) {
+        return { number: r.number, dateISO: r.date || '', clientName: r.client_name || '', email: r.email || '', total: Number(r.total) || 0, status: r.status || 'sent', paidDateISO: r.paid_date || '', items: r.items || [], notes: r.notes || '' };
+      }
+
+      async function insertMissing(rec: any) {
+        const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: rec.items || null, notes: rec.notes || null, status: rec.status || 'sent', paid_date: rec.paidDateISO || null };
+        await supabase!.from('invoices').insert(base);
+      }
+
+      async function loadRecords() {
+        if (cloudMode && supabase) {
+          try {
+            const { data: cloudData, error } = await supabase.from('invoices').select('*');
+            if (!error) {
+              // Push any on-device invoices the cloud doesn't have yet (safe: never deletes).
+              const cloudNums = new Set((cloudData || []).map((r: any) => r.number));
+              const missing = localRecords().filter((r: any) => r.number && !cloudNums.has(r.number));
+              for (const rec of missing) { try { await insertMissing(rec); } catch {} }
+              const fresh = missing.length ? (await supabase.from('invoices').select('*')).data : cloudData;
+              recordsCache = (fresh || []).map(dbToApp);
+              setLocalRecords(recordsCache);
+              renderRecords();
+              return;
+            }
+          } catch {}
+        }
+        recordsCache = localRecords();
+        renderRecords();
+      }
+
+      async function saveRecord(d: any) {
+        const rec = { number: d.number, dateISO: d.dateISO, clientName: d.clientName, email: d.clientEmail, total: invoiceTotal(d.items), items: d.items, notes: d.notes };
+        localUpsert(rec);
         markUsed(d.number);
-        renderRecords();
+        if (cloudMode && supabase) {
+          try {
+            const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes };
+            const { data: ex } = await supabase.from('invoices').select('id').eq('number', rec.number).maybeSingle();
+            if (ex) await supabase.from('invoices').update(base).eq('id', ex.id);
+            else await supabase.from('invoices').insert({ ...base, status: 'sent', paid_date: null });
+          } catch (e) { console.warn('Cloud save failed; kept on device.', e); }
+        }
+        await loadRecords();
       }
 
-      function setPaid(number: string, paid: boolean) {
-        const recs = loadRecords();
-        const r = recs.find((x) => x.number === number);
-        if (!r) return;
-        r.status = paid ? 'paid' : 'sent';
-        r.paidDateISO = paid ? todayISO() : '';
-        saveRecords(recs);
-        renderRecords();
+      async function setPaid(number: string, paid: boolean) {
+        const arr = localRecords();
+        const r = arr.find((x) => x.number === number);
+        if (r) { r.status = paid ? 'paid' : 'sent'; r.paidDateISO = paid ? todayISO() : ''; setLocalRecords(arr); }
+        if (cloudMode && supabase) {
+          try { await supabase.from('invoices').update({ status: paid ? 'paid' : 'sent', paid_date: paid ? todayISO() : null }).eq('number', number); } catch {}
+        }
+        await loadRecords();
       }
-      function deleteRecord(number: string) {
+
+      async function deleteRecord(number: string) {
         if (!confirm('Delete invoice ' + number + ' from your records?')) return;
-        saveRecords(loadRecords().filter((x) => x.number !== number));
-        renderRecords();
+        setLocalRecords(localRecords().filter((x) => x.number !== number));
+        if (cloudMode && supabase) { try { await supabase.from('invoices').delete().eq('number', number); } catch {} }
+        await loadRecords();
+      }
+
+      async function pushLocalToCloud() {
+        if (!(cloudMode && supabase)) { alert('Cloud sync is off. Log in with your Supabase passcode first.'); return; }
+        await loadRecords(); // loadRecords() pushes any device-only invoices to the cloud
+        alert('Your device records are synced to the cloud.');
       }
 
       function groupTotals(recs: any[], keyFn: (r: any) => string) {
@@ -773,7 +870,9 @@ const inv = site.invoice;
       }
 
       function renderRecords() {
-        const recs = loadRecords().slice().sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
+        const status = document.getElementById('rec-status');
+        if (status) status.textContent = cloudMode ? 'Cloud sync on. Synced across your devices.' : (supabase ? 'On this device only. Log in with your Supabase passcode to sync.' : 'Saved on this device.');
+        const recs = recordsCache.slice().sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
         const invoiced = recs.reduce((s, r) => s + (r.total || 0), 0);
         const paid = recs.filter((r) => r.status === 'paid').reduce((s, r) => s + (r.total || 0), 0);
         const outstanding = invoiced - paid;
@@ -914,6 +1013,7 @@ const inv = site.invoice;
           const f = (e.target as HTMLInputElement).files?.[0];
           if (f) importRecords(f);
         });
+        document.getElementById('rec-sync')!.addEventListener('click', () => pushLocalToCloud());
 
         // Re-fit the preview whenever its container changes size, including
         // when the Preview tab first becomes visible on mobile (0 -> width).
@@ -935,9 +1035,6 @@ const inv = site.invoice;
       function escapeAttr(s: string) {
         return escapeHtml(s).replace(/"/g, '&quot;');
       }
-
-      // If already unlocked on load, init immediately.
-      if (sessionStorage.getItem('uds_admin_ok') === '1') init();
     </script>
   </body>
 </html>
