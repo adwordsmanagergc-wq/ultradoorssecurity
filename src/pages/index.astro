@@ -6,7 +6,7 @@ import Hero from '../components/Hero.astro';
 import TrustBar from '../components/TrustBar.astro';
 import ServicesGrid from '../components/ServicesGrid.astro';
 import WhyUs from '../components/WhyUs.astro';
-import Gallery from '../components/Gallery.astro';
+import ProjectsMarquee from '../components/ProjectsMarquee.astro';
 import Testimonials from '../components/Testimonials.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import Footer from '../components/Footer.astro';
@@ -14,12 +14,12 @@ import { site } from '../data/site';
 import { projects } from '../data/portfolio';
 import { testimonials, aggregateRating } from '../data/testimonials';
 
-// Recent-projects subset for the home gallery (portfolio page shows all).
-const recent = [
-  ...projects.filter((p) => p.category === 'Security Doors').slice(0, 2),
-  ...projects.filter((p) => p.category === 'Roller Shutters').slice(0, 2),
-  ...projects.filter((p) => p.category === 'Industrial Doors').slice(0, 2),
-  ...projects.filter((p) => p.category === 'Shop Fronts & Glazing').slice(0, 2),
+// A spread of real projects for the auto-scrolling strip (portfolio has all).
+const marqueeProjects = [
+  ...projects.filter((p) => p.category === 'Security Doors').slice(0, 3),
+  ...projects.filter((p) => p.category === 'Roller Shutters').slice(0, 4),
+  ...projects.filter((p) => p.category === 'Industrial Doors').slice(0, 3),
+  ...projects.filter((p) => p.category === 'Shop Fronts & Glazing').slice(0, 3),
   ...projects.filter((p) => p.category === 'Security Gates').slice(0, 4),
 ];
 
@@ -57,20 +57,20 @@ const reviewSchema = {
     <ServicesGrid />
     <WhyUs />
 
-    <!-- Recent projects -->
-    <section class="bg-panel py-20 sm:py-24">
+    <!-- Recent projects (auto-scrolling strip) -->
+    <section class="overflow-hidden bg-panel py-16 sm:py-20">
       <div class="container-x">
         <div class="mx-auto max-w-2xl text-center reveal">
           <p class="eyebrow">Our work</p>
           <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl">Recent projects</h2>
           <p class="mt-4 text-lg text-[#3a4b5f]">
-            A selection of completed installations. Filter by category, or
-            <a href="/portfolio" class="font-semibold text-accent hover:underline">view the full portfolio</a>.
+            A few of our completed installations across the North West.
+            <a href="/portfolio" class="font-semibold text-accent hover:underline">View the full portfolio</a>.
           </p>
         </div>
-        <div class="mt-10">
-          <Gallery projects={recent} id="home-gallery" />
-        </div>
+      </div>
+      <div class="mt-10">
+        <ProjectsMarquee projects={marqueeProjects} />
       </div>
     </section>
 

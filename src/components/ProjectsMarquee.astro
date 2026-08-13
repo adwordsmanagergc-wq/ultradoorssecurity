@@ -1,0 +1,52 @@
+---
+import type { Project } from '../data/portfolio';
+interface Props {
+  projects: Project[];
+}
+const { projects } = Astro.props;
+// Duplicated once in the markup for a seamless loop.
+---
+<div class="marquee-wrap group relative overflow-hidden py-1">
+  <!-- edge fades -->
+  <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-panel to-transparent"></div>
+  <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-panel to-transparent"></div>
+
+  <div class="marquee flex w-max">
+    {
+      [...projects, ...projects].map((p, i) => (
+        <a
+          href="/portfolio"
+          class="mx-2.5 block h-40 shrink-0 overflow-hidden rounded-xl shadow-card ring-1 ring-black/5 sm:h-52"
+          aria-label={`View portfolio: ${p.alt}`}
+          aria-hidden={i >= projects.length ? 'true' : undefined}
+          tabindex={i >= projects.length ? -1 : undefined}
+        >
+          <img
+            src={p.src}
+            alt={i >= projects.length ? '' : p.alt}
+            loading="lazy"
+            decoding="async"
+            class="h-full w-auto max-w-none object-cover"
+          />
+        </a>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .marquee {
+    animation: marquee-scroll 55s linear infinite;
+  }
+  .marquee-wrap:hover .marquee {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee { animation: none; }
+    .marquee-wrap { overflow-x: auto; }
+  }
+</style>

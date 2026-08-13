@@ -51,15 +51,30 @@ const inv = site.invoice;
             <span class="text-lg font-extrabold">Invoicing</span>
           </div>
           <div class="flex items-center gap-2">
-            <a href="/" class="rounded-lg px-3 py-2 text-sm font-semibold text-navy hover:bg-panel">Website</a>
-            <button id="logout" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Log out</button>
+            <div class="flex rounded-xl bg-panel p-1">
+              <button data-screen="builder" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Invoice</button>
+              <button data-screen="records" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Records</button>
+            </div>
+            <a href="/" class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-navy hover:bg-panel sm:block">Website</a>
+            <button id="logout" type="button" class="rounded-lg border border-muted px-2.5 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Log out</button>
           </div>
         </div>
       </header>
 
-      <main class="mx-auto grid max-w-content gap-8 px-4 py-8 lg:grid-cols-[400px_1fr]">
-        <!-- FORM -->
-        <section class="no-print space-y-6">
+      <!-- BUILDER SCREEN -->
+      <div id="builder-screen">
+
+      <!-- Mobile Edit / Preview tabs -->
+      <div class="no-print sticky top-0 z-30 border-b border-black/10 bg-panel/95 backdrop-blur lg:hidden">
+        <div class="mx-auto grid max-w-content grid-cols-2 gap-2 px-4 py-2">
+          <button data-tab="edit" class="tabbtn rounded-xl px-4 py-2.5 text-sm font-bold">Edit invoice</button>
+          <button data-tab="preview" class="tabbtn rounded-xl px-4 py-2.5 text-sm font-bold">Preview</button>
+        </div>
+      </div>
+
+      <main class="mx-auto grid max-w-content gap-8 px-4 pb-28 pt-6 lg:grid-cols-[380px_1fr] lg:pb-10 lg:pt-8">
+        <!-- EDIT PANE -->
+        <section id="edit-pane" class="no-print space-y-5 lg:block">
           <div class="rounded-2xl bg-white p-6 shadow-card">
             <h2 class="text-lg font-bold">Invoice details</h2>
             <div class="mt-4 grid grid-cols-2 gap-3">
@@ -104,36 +119,97 @@ const inv = site.invoice;
             <textarea id="f-notes" rows="2" placeholder="Anything else to add to the invoice." class="mt-3 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none"></textarea>
           </div>
 
-          <div class="sticky bottom-0 rounded-2xl bg-navy p-4 shadow-card">
+          <!-- Desktop action bar -->
+          <div class="hidden rounded-2xl bg-navy p-4 shadow-card lg:block">
             <div class="grid grid-cols-2 gap-2">
-              <button id="btn-pdf" type="button" class="rounded-xl bg-white px-4 py-3 font-bold text-navy hover:bg-panel">Download PDF</button>
-              <button id="btn-print" type="button" class="rounded-xl border border-white/30 px-4 py-3 font-bold text-white hover:bg-white/10">Print</button>
-              <button id="btn-send" type="button" class="col-span-2 rounded-xl bg-accent px-4 py-3 font-bold text-white hover:bg-accent-hover">Send to client</button>
-              <button id="btn-new" type="button" class="col-span-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10">Start new invoice</button>
+              <button data-act="pdf" type="button" class="rounded-xl bg-white px-4 py-3 font-bold text-navy hover:bg-panel">Download PDF</button>
+              <button data-act="print" type="button" class="rounded-xl border border-white/30 px-4 py-3 font-bold text-white hover:bg-white/10">Print</button>
+              <button data-act="send" type="button" class="col-span-2 rounded-xl bg-accent px-4 py-3 font-bold text-white hover:bg-accent-hover">Send to client</button>
+              <button data-act="new" type="button" class="col-span-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10">Start new invoice</button>
             </div>
-            <p id="send-note" class="mt-3 hidden text-center text-sm text-white"></p>
+            <p class="send-note mt-3 hidden text-center text-sm text-white"></p>
           </div>
         </section>
 
-        <!-- PREVIEW -->
-        <section>
+        <!-- PREVIEW PANE -->
+        <section id="preview-pane" class="hidden lg:block">
           <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-[#5b6b7f] no-print">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             Live preview
           </div>
-          <div id="invoice-preview" class="mx-auto w-full max-w-[820px] bg-white shadow-card"></div>
+          <div class="preview-scaler mx-auto overflow-hidden rounded-lg">
+            <div id="invoice-preview" class="bg-white shadow-card" style="width:820px;transform-origin:top left;"></div>
+          </div>
         </section>
       </main>
+
+      <!-- Mobile action bar -->
+      <div class="no-print fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-navy px-3 py-2.5 lg:hidden">
+        <div class="mx-auto max-w-content">
+          <p class="send-note mb-2 hidden text-center text-xs text-white"></p>
+          <div class="grid grid-cols-2 gap-2">
+            <button data-act="pdf" type="button" class="rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-navy">Download PDF</button>
+            <button data-act="send" type="button" class="rounded-xl bg-accent px-3 py-2.5 text-sm font-bold text-white">Send to client</button>
+          </div>
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <button data-act="print" type="button" class="rounded-xl border border-white/25 px-3 py-2 text-xs font-semibold text-white">Print</button>
+            <button data-act="new" type="button" class="rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-white/80">New invoice</button>
+          </div>
+        </div>
+      </div>
+      </div><!-- /builder-screen -->
+
+      <!-- RECORDS SCREEN -->
+      <div id="records-screen" class="hidden">
+        <main class="mx-auto max-w-content px-4 pb-16 pt-6 lg:pt-8">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl font-extrabold">Invoices &amp; payments</h2>
+            <div class="flex gap-2">
+              <button id="rec-export" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Back up (export)</button>
+              <button id="rec-import" type="button" class="rounded-lg border border-muted px-3 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Restore</button>
+              <input id="rec-file" type="file" accept="application/json" class="hidden" />
+            </div>
+          </div>
+
+          <!-- Summary cards -->
+          <div id="rec-summary" class="mt-5 grid gap-3 sm:grid-cols-3"></div>
+
+          <!-- Breakdown by year / month -->
+          <div class="mt-6 grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl bg-white p-5 shadow-card">
+              <h3 class="font-bold">By year</h3>
+              <div id="rec-years" class="mt-3 overflow-x-auto"></div>
+            </div>
+            <div class="rounded-2xl bg-white p-5 shadow-card">
+              <h3 class="font-bold">By month</h3>
+              <div id="rec-months" class="mt-3 overflow-x-auto"></div>
+            </div>
+          </div>
+
+          <!-- Invoice list -->
+          <div class="mt-6 rounded-2xl bg-white p-5 shadow-card">
+            <h3 class="font-bold">All invoices</h3>
+            <div id="rec-list" class="mt-3 overflow-x-auto"></div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <style>
+      .tabbtn { border: 1px solid var(--muted); background: #fff; color: var(--navy); transition: all 0.15s; }
+      .tabbtn[aria-selected='true'] { background: var(--navy); color: #fff; border-color: var(--navy); }
+      .screenbtn { color: #5b6b7f; transition: all 0.15s; }
+      .screenbtn[aria-selected='true'] { background: #fff; color: var(--navy); box-shadow: 0 1px 2px rgba(2, 13, 26, 0.1); }
+
       @media print {
         body { background: #fff; }
-        .no-print, #gate { display: none !important; }
+        #gate, header, #records-screen, .no-print { display: none !important; }
         #app { display: block !important; }
-        header, main > section.no-print { display: none !important; }
+        #edit-pane { display: none !important; }
+        #preview-pane { display: block !important; }
         main { display: block !important; padding: 0 !important; }
-        #invoice-preview { box-shadow: none !important; max-width: none !important; }
+        .preview-scaler { overflow: visible !important; height: auto !important; border-radius: 0 !important; }
+        #invoice-preview { transform: none !important; width: 100% !important; box-shadow: none !important; }
       }
     </style>
 
@@ -182,6 +258,7 @@ const inv = site.invoice;
       type Row = { productType: string; description: string; unit: string; price: string };
       const DRAFT = 'uds_invoice_draft';
       const SEQ = 'uds_invoice_seq';
+      const RECORDS = 'uds_invoices';
 
       function todayISO() {
         const d = new Date();
@@ -206,17 +283,22 @@ const inv = site.invoice;
       };
 
       function rowHtml(r: Row, i: number) {
+        const field = 'w-full rounded-lg border border-muted px-2.5 py-2 text-sm focus:border-accent focus:outline-none';
         return `
-          <div class="row rounded-xl border border-muted p-3" data-i="${i}">
-            <div class="grid grid-cols-2 gap-2">
-              <input data-k="productType" value="${escapeAttr(r.productType)}" placeholder="Product type (e.g. R/S)" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
-              <div class="grid grid-cols-2 gap-2">
-                <input data-k="unit" value="${escapeAttr(r.unit)}" inputmode="decimal" placeholder="Qty" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
-                <input data-k="price" value="${escapeAttr(r.price)}" type="number" step="0.01" min="0" placeholder="Price each £" class="rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none" />
-              </div>
+          <div class="row rounded-xl border border-muted bg-white p-3" data-i="${i}">
+            <input data-k="productType" value="${escapeAttr(r.productType)}" placeholder="Product type (e.g. R/S)" class="${field} font-semibold" />
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              <label class="block text-xs font-semibold text-[#5b6b7f]">Qty
+                <input data-k="unit" value="${escapeAttr(r.unit)}" inputmode="decimal" placeholder="1" class="mt-1 ${field}" />
+              </label>
+              <label class="block text-xs font-semibold text-[#5b6b7f]">Price each £
+                <input data-k="price" value="${escapeAttr(r.price)}" type="number" step="0.01" min="0" placeholder="0.00" class="mt-1 ${field}" />
+              </label>
             </div>
-            <textarea data-k="description" rows="2" placeholder="Description of the work" class="mt-2 w-full rounded-lg border border-muted px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none">${escapeHtml(r.description)}</textarea>
-            <button type="button" class="del-row mt-1 text-xs font-semibold text-emergency hover:underline">Remove</button>
+            <textarea data-k="description" rows="2" placeholder="Description of the work" class="mt-2 ${field}">${escapeHtml(r.description)}</textarea>
+            <div class="mt-1.5 flex justify-end">
+              <button type="button" class="del-row text-xs font-semibold text-emergency hover:underline">Remove row</button>
+            </div>
           </div>`;
       }
 
@@ -341,7 +423,19 @@ const inv = site.invoice;
             </div>
           </div>
         </div>`;
+        fitPreview();
       }
+
+      // Scale the fixed-width invoice preview to fit its container (nice on mobile).
+      function fitPreview() {
+        const pv = els.preview();
+        const scaler = pv.parentElement as HTMLElement;
+        if (!scaler || scaler.clientWidth === 0) return;
+        const scale = Math.min(1, scaler.clientWidth / 820);
+        pv.style.transform = `scale(${scale})`;
+        scaler.style.height = pv.offsetHeight * scale + 'px';
+      }
+      window.addEventListener('resize', fitPreview);
 
       // ---------- PDF ----------
       let logoDataUrl: string | null = null;
@@ -512,16 +606,16 @@ const inv = site.invoice;
       async function downloadPdf() {
         const { doc, data } = await buildPdf();
         doc.save(fileName(data));
+        saveRecord(data);
         return data;
       }
 
       // ---------- Send ----------
       async function sendToClient() {
         const d = currentData();
-        const note = document.getElementById('send-note')!;
         if (!d.clientEmail) {
-          note.textContent = 'Add the client email above first, then press Send.';
-          note.classList.remove('hidden');
+          setNote('Add the client email above first, then press Send.');
+          switchTab('edit');
           els.email().focus();
           return;
         }
@@ -549,8 +643,14 @@ const inv = site.invoice;
           `Invoice ${d.number} from ${inv.tradingName}`
         )}&body=${encodeURIComponent(lines)}`;
         window.location.href = mailto;
-        note.textContent = 'PDF downloaded and your email opened. Attach the PDF, then send.';
-        note.classList.remove('hidden');
+        setNote('PDF downloaded and your email opened. Attach the PDF, then send. Saved to Records.');
+      }
+
+      function setNote(text: string) {
+        document.querySelectorAll('.send-note').forEach((n) => {
+          n.textContent = text;
+          (n as HTMLElement).classList.remove('hidden');
+        });
       }
 
       // ---------- Wire up ----------
@@ -590,8 +690,19 @@ const inv = site.invoice;
         }
       }
 
-      function freshInvoice(commit: boolean) {
-        if (commit) localStorage.setItem(SEQ, String(nextSeq())); // advance the counter
+      function invSeqFromNumber(number: string): number {
+        const n = parseInt(String(number).split('-').pop() || '', 10);
+        return Number.isFinite(n) ? n : 0;
+      }
+      /** Mark a sequence as used so the next generated number moves on. */
+      function markUsed(number: string) {
+        const seq = invSeqFromNumber(number);
+        const stored = parseInt(localStorage.getItem(SEQ) || '0', 10) || 0;
+        if (seq > stored) localStorage.setItem(SEQ, String(seq));
+      }
+
+      function freshInvoice() {
+        markUsed(els.number().value); // consume the current number
         localStorage.removeItem(DRAFT);
         els.number().value = genNumber();
         els.date().value = todayISO();
@@ -605,6 +716,173 @@ const inv = site.invoice;
         renderPreview();
       }
 
+      // ---------- Records (saved invoices + payments) ----------
+      function loadRecords(): any[] {
+        try { return JSON.parse(localStorage.getItem(RECORDS) || '[]'); } catch { return []; }
+      }
+      function saveRecords(a: any[]) { localStorage.setItem(RECORDS, JSON.stringify(a)); }
+
+      function saveRecord(d: any) {
+        const total = invoiceTotal(d.items);
+        const recs = loadRecords();
+        const i = recs.findIndex((r) => r.number === d.number);
+        const base = { number: d.number, dateISO: d.dateISO, clientName: d.clientName, email: d.clientEmail, total };
+        if (i >= 0) recs[i] = { ...recs[i], ...base };
+        else recs.push({ ...base, status: 'sent', paidDateISO: '' });
+        saveRecords(recs);
+        markUsed(d.number);
+        renderRecords();
+      }
+
+      function setPaid(number: string, paid: boolean) {
+        const recs = loadRecords();
+        const r = recs.find((x) => x.number === number);
+        if (!r) return;
+        r.status = paid ? 'paid' : 'sent';
+        r.paidDateISO = paid ? todayISO() : '';
+        saveRecords(recs);
+        renderRecords();
+      }
+      function deleteRecord(number: string) {
+        if (!confirm('Delete invoice ' + number + ' from your records?')) return;
+        saveRecords(loadRecords().filter((x) => x.number !== number));
+        renderRecords();
+      }
+
+      function groupTotals(recs: any[], keyFn: (r: any) => string) {
+        const map: Record<string, { invoiced: number; paid: number }> = {};
+        recs.forEach((r) => {
+          const k = keyFn(r);
+          if (!k) return;
+          if (!map[k]) map[k] = { invoiced: 0, paid: 0 };
+          map[k].invoiced += r.total || 0;
+          if (r.status === 'paid') map[k].paid += r.total || 0;
+        });
+        return map;
+      }
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      function monthLabel(k: string) {
+        const [y, m] = k.split('-');
+        return `${MONTHS[parseInt(m, 10) - 1]} ${y}`;
+      }
+
+      function renderRecords() {
+        const recs = loadRecords().slice().sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
+        const invoiced = recs.reduce((s, r) => s + (r.total || 0), 0);
+        const paid = recs.filter((r) => r.status === 'paid').reduce((s, r) => s + (r.total || 0), 0);
+        const outstanding = invoiced - paid;
+
+        const summary = document.getElementById('rec-summary');
+        if (summary) {
+          const card = (label: string, value: string, color: string) =>
+            `<div class="rounded-2xl bg-white p-5 shadow-card"><div class="text-sm font-semibold text-[#5b6b7f]">${label}</div><div class="mt-1 text-3xl font-extrabold" style="color:${color}">${value}</div></div>`;
+          summary.innerHTML =
+            card('Invoiced', formatGBP(invoiced), '#152437') +
+            card('Paid', formatGBP(paid), '#16a34a') +
+            card('Outstanding', formatGBP(outstanding), '#e11d2a');
+        }
+
+        const tbl = (rows: string, headers: string[]) =>
+          `<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:340px;">
+            <thead><tr style="text-align:left;color:#5b6b7f;border-bottom:2px solid #e7edf4;">
+              ${headers.map((h, i) => `<th style="padding:8px 10px;${i ? 'text-align:right;' : ''}">${h}</th>`).join('')}
+            </tr></thead><tbody>${rows}</tbody></table>`;
+
+        const years = groupTotals(recs, (r) => (r.dateISO || '').slice(0, 4));
+        const yearsEl = document.getElementById('rec-years');
+        if (yearsEl) {
+          const rows = Object.keys(years).sort().reverse().map((y) => {
+            const g = years[y];
+            return `<tr style="border-bottom:1px solid #f0f3f7;"><td style="padding:8px 10px;font-weight:700;">${y}</td><td style="padding:8px 10px;text-align:right;">${formatGBP(g.invoiced)}</td><td style="padding:8px 10px;text-align:right;color:#16a34a;">${formatGBP(g.paid)}</td><td style="padding:8px 10px;text-align:right;color:#e11d2a;">${formatGBP(g.invoiced - g.paid)}</td></tr>`;
+          }).join('');
+          yearsEl.innerHTML = rows ? tbl(rows, ['Year', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
+        }
+
+        const months = groupTotals(recs, (r) => (r.dateISO || '').slice(0, 7));
+        const monthsEl = document.getElementById('rec-months');
+        if (monthsEl) {
+          const rows = Object.keys(months).sort().reverse().slice(0, 12).map((k) => {
+            const g = months[k];
+            return `<tr style="border-bottom:1px solid #f0f3f7;"><td style="padding:8px 10px;font-weight:700;">${monthLabel(k)}</td><td style="padding:8px 10px;text-align:right;">${formatGBP(g.invoiced)}</td><td style="padding:8px 10px;text-align:right;color:#16a34a;">${formatGBP(g.paid)}</td><td style="padding:8px 10px;text-align:right;color:#e11d2a;">${formatGBP(g.invoiced - g.paid)}</td></tr>`;
+          }).join('');
+          monthsEl.innerHTML = rows ? tbl(rows, ['Month', 'Invoiced', 'Paid', 'Outstanding']) : '<p class="text-sm text-[#5b6b7f]">No invoices yet.</p>';
+        }
+
+        const listEl = document.getElementById('rec-list');
+        if (listEl) {
+          if (!recs.length) {
+            listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No invoices saved yet. Download or send an invoice and it will appear here.</p>';
+          } else {
+            const rows = recs.map((r) => {
+              const badge = r.status === 'paid'
+                ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Paid</span>'
+                : '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Unpaid</span>';
+              const toggle = r.status === 'paid'
+                ? `<button data-unpaid="${r.number}" style="color:#5b6b7f;font-weight:600;">Mark unpaid</button>`
+                : `<button data-paid="${r.number}" style="color:#16a34a;font-weight:700;">Mark paid</button>`;
+              return `<tr style="border-bottom:1px solid #f0f3f7;">
+                <td style="padding:9px 10px;white-space:nowrap;">${formatDateUK(r.dateISO)}</td>
+                <td style="padding:9px 10px;font-weight:700;white-space:nowrap;">${escapeHtml(r.number)}</td>
+                <td style="padding:9px 10px;">${escapeHtml(r.clientName || '')}</td>
+                <td style="padding:9px 10px;text-align:right;white-space:nowrap;font-weight:700;">${formatGBP(r.total)}</td>
+                <td style="padding:9px 10px;text-align:center;">${badge}</td>
+                <td style="padding:9px 10px;text-align:right;white-space:nowrap;">${toggle} &nbsp; <button data-del="${r.number}" style="color:#e11d2a;font-weight:600;">Delete</button></td>
+              </tr>`;
+            }).join('');
+            listEl.innerHTML = tbl(rows, ['Date', 'Invoice', 'Client', 'Amount', 'Status', '']);
+            listEl.querySelectorAll('[data-paid]').forEach((b) => b.addEventListener('click', () => setPaid((b as HTMLElement).dataset.paid!, true)));
+            listEl.querySelectorAll('[data-unpaid]').forEach((b) => b.addEventListener('click', () => setPaid((b as HTMLElement).dataset.unpaid!, false)));
+            listEl.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => deleteRecord((b as HTMLElement).dataset.del!)));
+          }
+        }
+      }
+
+      // ---------- Screen + tab switching ----------
+      function switchScreen(name: string) {
+        const builder = document.getElementById('builder-screen')!;
+        const records = document.getElementById('records-screen')!;
+        const isRec = name === 'records';
+        builder.classList.toggle('hidden', isRec);
+        records.classList.toggle('hidden', !isRec);
+        document.querySelectorAll('.screenbtn').forEach((b) =>
+          b.setAttribute('aria-selected', String((b as HTMLElement).dataset.screen === name))
+        );
+        if (isRec) renderRecords();
+        else fitPreview();
+      }
+      function switchTab(name: string) {
+        const edit = document.getElementById('edit-pane')!;
+        const prev = document.getElementById('preview-pane')!;
+        const isPrev = name === 'preview';
+        edit.classList.toggle('hidden', isPrev);
+        prev.classList.toggle('hidden', !isPrev);
+        document.querySelectorAll('.tabbtn').forEach((b) =>
+          b.setAttribute('aria-selected', String((b as HTMLElement).dataset.tab === name))
+        );
+        if (isPrev) fitPreview();
+      }
+
+      function exportRecords() {
+        const blob = new Blob([JSON.stringify(loadRecords(), null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ultra-doors-invoices-backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      function importRecords(file: File) {
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            const arr = JSON.parse(String(r.result));
+            if (Array.isArray(arr)) { saveRecords(arr); renderRecords(); alert('Restored ' + arr.length + ' invoices.'); }
+            else alert('That file does not look like a backup.');
+          } catch { alert('Could not read that file.'); }
+        };
+        r.readAsText(file);
+      }
+
       let inited = false;
       function init() {
         if (inited) return;
@@ -613,14 +891,27 @@ const inv = site.invoice;
           el.addEventListener('input', () => { renderPreview(); saveDraft(); })
         );
         document.getElementById('add-row')!.addEventListener('click', () => { addRow(); saveDraft(); });
-        document.getElementById('btn-pdf')!.addEventListener('click', () => downloadPdf());
-        document.getElementById('btn-print')!.addEventListener('click', () => window.print());
-        document.getElementById('btn-send')!.addEventListener('click', () => sendToClient());
-        document.getElementById('btn-new')!.addEventListener('click', () => {
-          if (confirm('Start a new blank invoice? The current draft will be cleared.')) freshInvoice(true);
+
+        document.querySelectorAll('[data-act="pdf"]').forEach((b) => b.addEventListener('click', () => downloadPdf()));
+        document.querySelectorAll('[data-act="print"]').forEach((b) => b.addEventListener('click', () => window.print()));
+        document.querySelectorAll('[data-act="send"]').forEach((b) => b.addEventListener('click', () => sendToClient()));
+        document.querySelectorAll('[data-act="new"]').forEach((b) =>
+          b.addEventListener('click', () => { if (confirm('Start a new blank invoice? The current draft will be cleared.')) freshInvoice(); })
+        );
+
+        document.querySelectorAll('.tabbtn').forEach((b) => b.addEventListener('click', () => switchTab((b as HTMLElement).dataset.tab!)));
+        document.querySelectorAll('.screenbtn').forEach((b) => b.addEventListener('click', () => switchScreen((b as HTMLElement).dataset.screen!)));
+
+        document.getElementById('rec-export')!.addEventListener('click', exportRecords);
+        document.getElementById('rec-import')!.addEventListener('click', () => document.getElementById('rec-file')!.click());
+        document.getElementById('rec-file')!.addEventListener('change', (e) => {
+          const f = (e.target as HTMLInputElement).files?.[0];
+          if (f) importRecords(f);
         });
 
-        if (!loadDraft()) freshInvoice(false);
+        if (!loadDraft()) freshInvoice();
+        switchTab('edit');
+        switchScreen('builder');
         renderPreview();
       }
 
