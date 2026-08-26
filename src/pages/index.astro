@@ -6,23 +6,12 @@ import Hero from '../components/Hero.astro';
 import TrustBar from '../components/TrustBar.astro';
 import ServicesGrid from '../components/ServicesGrid.astro';
 import WhyUs from '../components/WhyUs.astro';
-import ProjectsMarquee from '../components/ProjectsMarquee.astro';
 import ProjectGallery from '../components/ProjectGallery.astro';
 import Testimonials from '../components/Testimonials.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import Footer from '../components/Footer.astro';
 import { site } from '../data/site';
-import { projects } from '../data/portfolio';
 import { testimonials, aggregateRating } from '../data/testimonials';
-
-// A spread of real projects for the auto-scrolling strip (portfolio has all).
-const marqueeProjects = [
-  ...projects.filter((p) => p.category === 'Security Doors').slice(0, 3),
-  ...projects.filter((p) => p.category === 'Roller Shutters').slice(0, 4),
-  ...projects.filter((p) => p.category === 'Industrial Doors').slice(0, 3),
-  ...projects.filter((p) => p.category === 'Shop Fronts & Glazing').slice(0, 3),
-  ...projects.filter((p) => p.category === 'Security Gates').slice(0, 4),
-];
 
 const reviewSchema = {
   '@context': 'https://schema.org',
@@ -58,36 +47,20 @@ const reviewSchema = {
     <ServicesGrid />
     <WhyUs />
 
-    <!-- Recent projects (auto-scrolling strip) -->
+    <!-- Before & after / recent installations (auto-scrolling gallery) -->
     <section class="overflow-hidden bg-panel py-16 sm:py-20">
-      <div class="container-x">
-        <div class="mx-auto max-w-2xl text-center reveal">
-          <p class="eyebrow">Our work</p>
-          <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl">Recent projects</h2>
-          <p class="mt-4 text-lg text-[#3a4b5f]">
-            A few of our completed installations across the North West.
-            <a href="/portfolio" class="font-semibold text-accent hover:underline">View the full portfolio</a>.
-          </p>
-        </div>
-      </div>
-      <div class="mt-10">
-        <ProjectsMarquee projects={marqueeProjects} />
-      </div>
-    </section>
-
-    <!-- Before & after / recent installations (sliding gallery) -->
-    <section class="overflow-hidden bg-panel pb-16 pt-4 sm:pb-20">
       <div class="container-x">
         <div class="mx-auto max-w-2xl text-center reveal">
           <p class="eyebrow">Before &amp; after</p>
           <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl">Recent installations</h2>
           <p class="mt-4 text-lg text-[#3a4b5f]">
             Real jobs completed across the North West, from domestic garages to
-            commercial units and shopfronts. Swipe to see more.
+            commercial units and shopfronts.
+            <a href="/portfolio" class="font-semibold text-accent hover:underline">View the full portfolio</a>.
           </p>
         </div>
       </div>
-      <div class="container-x mt-8">
+      <div class="mt-10">
         <ProjectGallery />
       </div>
     </section>
