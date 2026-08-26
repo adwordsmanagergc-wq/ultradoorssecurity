@@ -38,8 +38,8 @@ export const services: Service[] = [
     title: 'Industrial Doors',
     description:
       'Durable industrial doors built for performance, safety and reliability.',
-    image: '/images/commercial-thumb.jpg',
-    alt: 'Commercial roller shutter door on an industrial unit',
+    image: '/images/gallery/steel-doors-storage-units.jpg',
+    alt: 'Steel personnel doors fitted to a green-clad industrial unit',
     category: 'Industrial Doors',
   },
   {
