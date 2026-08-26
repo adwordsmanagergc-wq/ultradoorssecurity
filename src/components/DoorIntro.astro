@@ -1,0 +1,172 @@
+---
+/**
+ * Animated entrance: a steel roller shutter carrying the brand emblem, which
+ * rolls upward on page load to reveal the site, like a shop shutter opening.
+ *
+ * Driven entirely by CSS animation, so it plays even if JavaScript is off and
+ * can never trap the visitor: the final keyframe sets the overlay to
+ * visibility:hidden and pointer-events:none. A prefers-reduced-motion rule
+ * removes it for anyone who opts out of motion. A JS safety net hides it a few
+ * seconds in for browsers that stall animations while backgrounded.
+ */
+---
+<div class="door-intro" aria-hidden="true">
+  <div class="door-shutter">
+    <!-- steel slats fill the panel via CSS; rail + emblem sit on top -->
+    <div class="door-emblem">
+      <div class="door-emblem__ring">
+        <img src="/images/ultradoors-logo.webp" alt="" width="120" height="96" />
+      </div>
+      <span class="door-emblem__name">Ultra Doors Security</span>
+      <span class="door-emblem__tag">Bespoke · Secure · Built to Last</span>
+    </div>
+    <div class="door-rail" aria-hidden="true">
+      <span class="door-rail__grip"></span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .door-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    overflow: hidden;
+    background: transparent;
+    animation: door-hide 0.3s ease 4.1s forwards;
+  }
+
+  /* The shutter panel: metallic steel slats covering the whole viewport. */
+  .door-shutter {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+    background:
+      /* soft left/right metallic shading */
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.32) 0%,
+        rgba(255, 255, 255, 0.12) 20%,
+        rgba(255, 255, 255, 0.04) 50%,
+        rgba(255, 255, 255, 0.12) 80%,
+        rgba(0, 0, 0, 0.34) 100%
+      ),
+      /* the horizontal slats */
+      repeating-linear-gradient(
+        to bottom,
+        #9aa2ac 0,
+        #e9edf1 4px,
+        #cdd3da 12px,
+        #aab2bb 19px,
+        #808892 22px,
+        #6b737d 23px,
+        #aab2bb 25px
+      );
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    animation: door-up 1.55s cubic-bezier(0.7, 0, 0.2, 1) 2.35s forwards;
+  }
+
+  /* Bottom closing rail with a centre grip. */
+  .door-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 52px;
+    background: linear-gradient(to bottom, #5c636d, #3a404a 55%, #2a2f37);
+    box-shadow:
+      0 -2px 0 rgba(255, 255, 255, 0.18) inset,
+      0 10px 24px rgba(0, 0, 0, 0.4);
+  }
+  .door-rail__grip {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 140px;
+    height: 8px;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
+    background: linear-gradient(to bottom, #20242b, #454b55);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .door-emblem {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: emblem-in 0.7s ease-out both;
+    will-change: transform, opacity;
+  }
+  .door-emblem__ring {
+    display: grid;
+    place-items: center;
+    width: 168px;
+    height: 168px;
+    border-radius: 9999px;
+    background: radial-gradient(circle at 50% 40%, #142138, #0a0f1c);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    box-shadow:
+      0 0 0 3px #d7a53f,
+      0 0 40px rgba(215, 165, 63, 0.35),
+      0 18px 40px rgba(0, 0, 0, 0.45),
+      inset 0 0 30px rgba(0, 0, 0, 0.6);
+  }
+  .door-emblem__ring img {
+    width: 108px;
+    height: auto;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  }
+  .door-emblem__name {
+    margin-top: 18px;
+    font-family: 'Plus Jakarta Sans Variable', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.01em;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+  .door-emblem__tag {
+    margin-top: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #f0c964;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  @keyframes emblem-in {
+    from { opacity: 0; transform: translate(-50%, -44%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes door-up {
+    to { transform: translateY(-105%); }
+  }
+  @keyframes door-hide {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+  }
+
+  /* Respect reduced-motion: skip the entrance entirely. */
+  @media (prefers-reduced-motion: reduce) {
+    .door-intro { display: none; }
+  }
+</style>
+
+<script is:inline>
+  // Safety net: guarantee the overlay is gone shortly after the animation,
+  // even on browsers that stall the animation while backgrounded.
+  (function () {
+    var el = document.querySelector('.door-intro');
+    if (!el) return;
+    setTimeout(function () {
+      el.style.visibility = 'hidden';
+      el.style.pointerEvents = 'none';
+    }, 6000);
+  })();
+</script>
