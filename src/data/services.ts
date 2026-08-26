@@ -47,8 +47,8 @@ export const services: Service[] = [
     title: 'Shop Fronts & Glazing',
     description:
       'Aluminium shop fronts, glazing and bespoke fabrication services.',
-    image: '/images/windows-doors-thumb.jpg',
-    alt: 'Home fitted with new white uPVC windows and French doors',
+    image: '/images/gallery/retail-shutter-shopping-centre.jpg',
+    alt: 'Retail shopfront with glazing and a security shutter in a shopping centre',
     category: 'Shop Fronts & Glazing',
   },
   {
