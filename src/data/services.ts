@@ -29,8 +29,8 @@ export const services: Service[] = [
     title: 'Roller Shutters',
     description:
       'Manual or electric roller shutters for windows, doors and commercial premises.',
-    image: '/images/gallery/shop-shutter-after.jpg',
-    alt: 'New galvanised roller shutter fitted to a shopfront',
+    image: '/images/gallery/roller-shutters-garage-block.jpg',
+    alt: 'Galvanised roller shutters fitted to a block of garages',
     category: 'Roller Shutters',
   },
   {
