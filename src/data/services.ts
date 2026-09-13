@@ -10,6 +10,8 @@ export interface Service {
   image: string;
   alt: string;
   category: string;
+  /** Optional custom link; defaults to the portfolio category anchor. */
+  href?: string;
   /** Emergency services get the red accent + emergency phone. */
   emergency?: boolean;
 }
@@ -32,6 +34,16 @@ export const services: Service[] = [
     image: '/images/gallery/roller-shutters-garage-block.jpg',
     alt: 'Galvanised roller shutters fitted to a block of garages',
     category: 'Roller Shutters',
+  },
+  {
+    slug: 'garage-doors',
+    title: 'Garage Doors',
+    description:
+      'Roller, sectional and up-and-over garage doors, supplied, fitted, automated and repaired.',
+    image: '/images/gallery/roller-shutter-white-garage.jpg',
+    alt: 'White insulated roller garage door fitted to a domestic garage',
+    category: 'Roller Shutters',
+    href: '/garage-doors/',
   },
   {
     slug: 'industrial-doors',
@@ -75,6 +87,7 @@ export const services: Service[] = [
 export const serviceOptions = [
   'Security Doors',
   'Roller Shutters',
+  'Garage Doors',
   'Industrial Doors',
   'Shop Fronts & Glazing',
   'Security Gates',

@@ -4,6 +4,7 @@ interface Props {
   service: Service;
 }
 const { service } = Astro.props;
+const href = service.href ?? `/portfolio#${service.slug}`;
 ---
 <article class="card group flex flex-col overflow-hidden hover:-translate-y-1 hover:shadow-card-hover">
   <div class="relative aspect-[16/10] overflow-hidden bg-panel">
@@ -28,7 +29,7 @@ const { service } = Astro.props;
     <h3 class="text-xl font-bold text-navy">{service.title}</h3>
     <p class="mt-2 flex-1 leading-relaxed text-[#3a4b5f]">{service.description}</p>
     <a
-      href={`/portfolio#${service.slug}`}
+      href={href}
       class="mt-4 inline-flex items-center gap-1.5 font-bold text-accent transition-all group-hover:gap-2.5"
     >
       Learn more
