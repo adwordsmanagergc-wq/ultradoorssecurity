@@ -66,6 +66,19 @@ const localBusiness = {
   },
   ...(sameAs.length ? { sameAs } : {}),
 };
+
+// Site-level schema so search engines resolve the brand/site name.
+const website = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${site.url}/#website`,
+  name: site.name,
+  url: site.url,
+  publisher: { '@id': `${site.url}/#business` },
+  inLanguage: 'en-GB',
+};
+
+const ogImageAlt = `${site.name}, ${site.tagline}`;
 ---
 
 <!doctype html>
@@ -91,6 +104,9 @@ const localBusiness = {
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogImageAlt} />
     <meta property="og:locale" content="en_GB" />
 
     <!-- Twitter -->
@@ -98,11 +114,16 @@ const localBusiness = {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
 
     <!-- Structured data -->
     <script
       type="application/ld+json"
       set:html={JSON.stringify(localBusiness)}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(website)}
     />
     {
       jsonLd.map((obj) => (
