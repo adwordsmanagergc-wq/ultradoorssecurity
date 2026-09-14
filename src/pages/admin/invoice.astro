@@ -51,9 +51,11 @@ const inv = site.invoice;
             <span class="text-lg font-extrabold">Invoicing</span>
           </div>
           <div class="flex items-center gap-2">
-            <div class="flex rounded-xl bg-panel p-1">
-              <button data-screen="builder" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Invoice</button>
-              <button data-screen="records" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Records</button>
+            <div class="flex flex-wrap rounded-xl bg-panel p-1">
+              <button data-screen="builder" data-doc="invoice" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Invoice</button>
+              <button data-screen="builder" data-doc="quote" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Quote</button>
+              <button data-screen="records" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Invoices</button>
+              <button data-screen="quotes" class="screenbtn rounded-lg px-3 py-1.5 text-sm font-bold">Quotes</button>
             </div>
             <a href="/" class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-navy hover:bg-panel sm:block">Website</a>
             <button id="logout" type="button" class="rounded-lg border border-muted px-2.5 py-2 text-sm font-semibold hover:border-accent hover:text-accent">Log out</button>
@@ -67,7 +69,7 @@ const inv = site.invoice;
       <!-- Mobile Edit / Preview tabs -->
       <div class="no-print sticky top-0 z-30 border-b border-black/10 bg-panel/95 backdrop-blur lg:hidden">
         <div class="mx-auto grid max-w-content grid-cols-2 gap-2 px-4 py-2">
-          <button data-tab="edit" class="tabbtn rounded-xl px-4 py-2.5 text-sm font-bold">Edit invoice</button>
+          <button data-tab="edit" class="tabbtn rounded-xl px-4 py-2.5 text-sm font-bold"><span class="doc-edit-label">Edit invoice</span></button>
           <button data-tab="preview" class="tabbtn rounded-xl px-4 py-2.5 text-sm font-bold">Preview</button>
         </div>
       </div>
@@ -76,10 +78,10 @@ const inv = site.invoice;
         <!-- EDIT PANE -->
         <section id="edit-pane" class="no-print space-y-5 lg:block">
           <div class="rounded-2xl bg-white p-6 shadow-card">
-            <h2 class="text-lg font-bold">Invoice details</h2>
+            <h2 class="text-lg font-bold"><span class="doc-title-label">Invoice</span> details</h2>
             <div class="mt-4 grid grid-cols-2 gap-3">
               <label class="block text-sm">
-                <span class="font-semibold text-[#5b6b7f]">Invoice no.</span>
+                <span class="font-semibold text-[#5b6b7f]"><span class="doc-title-label">Invoice</span> no.</span>
                 <input id="f-number" type="text" class="mt-1 w-full rounded-lg border border-muted px-3 py-2 focus:border-accent focus:outline-none" />
               </label>
               <label class="block text-sm">
@@ -223,6 +225,40 @@ const inv = site.invoice;
           </div>
         </main>
       </div>
+
+      <!-- QUOTES SCREEN -->
+      <div id="quotes-screen" class="hidden">
+        <main class="mx-auto max-w-content px-4 pb-16 pt-6 lg:pt-8">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-xl font-extrabold">Quotes</h2>
+              <p id="q-status" class="mt-0.5 text-sm text-[#5b6b7f]"></p>
+            </div>
+            <button data-screen="builder" data-doc="quote" class="rounded-lg bg-accent px-3 py-2 text-sm font-bold text-white hover:bg-accent-hover">+ New quote</button>
+          </div>
+
+          <!-- Summary cards -->
+          <div id="q-summary" class="mt-4 grid gap-3 sm:grid-cols-3"></div>
+
+          <!-- Quote list -->
+          <div class="mt-6 rounded-2xl bg-white p-5 shadow-card">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h3 class="font-bold">All quotes</h3>
+              <div class="flex flex-wrap gap-2">
+                <input id="q-search" type="search" placeholder="Search client or number" class="rounded-lg border border-muted px-3 py-2 text-sm focus:border-accent focus:outline-none" />
+                <select id="q-filter-status" class="rounded-lg border border-muted px-3 py-2 text-sm focus:border-accent focus:outline-none">
+                  <option value="all">All statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="declined">Declined</option>
+                </select>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-[#5b6b7f]">When a client accepts a quote, press <strong>Accept</strong> to turn it into an invoice automatically, then open that invoice to send it.</p>
+            <div id="q-list" class="mt-3 overflow-x-auto"></div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <style>
@@ -235,7 +271,7 @@ const inv = site.invoice;
 
       @media print {
         body { background: #fff; }
-        #gate, header, #records-screen, .no-print { display: none !important; }
+        #gate, header, #records-screen, #quotes-screen, .no-print { display: none !important; }
         #app { display: block !important; }
         #edit-pane { display: none !important; }
         #preview-pane { display: block !important; }
@@ -282,6 +318,7 @@ const inv = site.invoice;
         unlock();
         init();
         await loadRecords();
+        await loadQuotes();
       }
       async function attemptLogin(code: string): Promise<boolean> {
         // Try cloud auth first (passcode = the owner account's password).
@@ -328,19 +365,29 @@ const inv = site.invoice;
 
       // ---------- State ----------
       type Row = { productType: string; description: string; unit: string; price: string };
-      const DRAFT = 'uds_invoice_draft';
-      const SEQ = 'uds_invoice_seq';
+      // The builder is shared between invoices and quotes; docType selects which.
+      let docType: 'invoice' | 'quote' = 'invoice';
+      const INV_DRAFT = 'uds_invoice_draft';
+      const Q_DRAFT = 'uds_quote_draft';
+      const INV_SEQ = 'uds_invoice_seq';
+      const Q_SEQ = 'uds_quote_seq';
       const RECORDS = 'uds_invoices';
+      const QUOTES = 'uds_quotes';
+      const isQuote = () => docType === 'quote';
+      const draftKey = () => (isQuote() ? Q_DRAFT : INV_DRAFT);
+      const seqKey = () => (isQuote() ? Q_SEQ : INV_SEQ);
+      const docWord = (cap = true) => (isQuote() ? (cap ? 'Quote' : 'quote') : (cap ? 'Invoice' : 'invoice'));
 
       function todayISO() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }
       function nextSeq() {
-        return (parseInt(localStorage.getItem(SEQ) || '0', 10) || 0) + 1;
+        return (parseInt(localStorage.getItem(seqKey()) || '0', 10) || 0) + 1;
       }
       function genNumber() {
-        return makeInvoiceNumber(inv.numberPrefix, nextSeq(), new Date().getFullYear());
+        const prefix = isQuote() ? inv.numberPrefix + '-Q' : inv.numberPrefix;
+        return makeInvoiceNumber(prefix, nextSeq(), new Date().getFullYear());
       }
 
       const els = {
@@ -408,7 +455,7 @@ const inv = site.invoice;
 
       function saveDraft() {
         const d = currentData();
-        localStorage.setItem(DRAFT, JSON.stringify(d));
+        localStorage.setItem(draftKey(), JSON.stringify(d));
       }
 
       // ---------- Preview ----------
@@ -443,8 +490,8 @@ const inv = site.invoice;
               </div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:34px;font-weight:800;letter-spacing:-0.02em;color:#1863dc;line-height:1;">INVOICE</div>
-              <div style="margin-top:12px;font-size:12px;color:#5b6b7f;">Invoice no.</div>
+              <div style="font-size:34px;font-weight:800;letter-spacing:-0.02em;color:#1863dc;line-height:1;">${docWord(true).toUpperCase()}</div>
+              <div style="margin-top:12px;font-size:12px;color:#5b6b7f;">${docWord(true)} no.</div>
               <div style="font-weight:700;">${escapeHtml(d.number)}</div>
               <div style="margin-top:6px;font-size:12px;color:#5b6b7f;">Date</div>
               <div style="font-weight:700;">${formatDateUK(d.dateISO)}</div>
@@ -531,6 +578,9 @@ const inv = site.invoice;
 
       async function buildPdf(dataArg?: any) {
         const d = dataArg || currentData();
+        const type = d._docType || docType;
+        const heading = type === 'quote' ? 'QUOTE' : 'INVOICE';
+        const numLabel = type === 'quote' ? 'Quote no.' : 'Invoice no.';
         const total = invoiceTotal(d.items);
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
         const W = 210;
@@ -549,11 +599,11 @@ const inv = site.invoice;
         doc.setTextColor(...blue);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(26);
-        doc.text('INVOICE', W - m, 22, { align: 'right' });
+        doc.text(heading, W - m, 22, { align: 'right' });
         doc.setFontSize(9);
         doc.setTextColor(...grey);
         doc.setFont('helvetica', 'normal');
-        doc.text('Invoice no.', W - m, 30, { align: 'right' });
+        doc.text(numLabel, W - m, 30, { align: 'right' });
         doc.setTextColor(...navy);
         doc.setFont('helvetica', 'bold');
         doc.text(d.number || '', W - m, 34.5, { align: 'right' });
@@ -676,15 +726,18 @@ const inv = site.invoice;
         return { doc, data: d };
       }
 
-      function fileName(d: { number: string; clientName: string }) {
+      function fileName(d: { number: string; clientName: string; _docType?: string }) {
         const client = (d.clientName || 'client').replace(/[^a-z0-9]+/gi, '-').slice(0, 30);
-        return `Invoice-${d.number || 'draft'}-${client}.pdf`;
+        const label = (d._docType || docType) === 'quote' ? 'Quote' : 'Invoice';
+        return `${label}-${d.number || 'draft'}-${client}.pdf`;
       }
 
       async function downloadPdf() {
         const { doc, data } = await buildPdf();
+        data._docType = docType;
         doc.save(fileName(data));
-        await saveRecord(data);
+        if (isQuote()) await saveQuote(data);
+        else await saveRecord(data);
         return data;
       }
 
@@ -692,7 +745,7 @@ const inv = site.invoice;
       async function downloadRecordPdf(number: string) {
         const rec = recordsCache.find((r) => r.number === number);
         if (!rec) return;
-        const data = { number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, clientAddress: rec.clientAddress, clientEmail: rec.email, items: rec.items, notes: rec.notes };
+        const data = { number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, clientAddress: rec.clientAddress, clientEmail: rec.email, items: rec.items, notes: rec.notes, _docType: 'invoice' };
         const { doc } = await buildPdf(data);
         doc.save(fileName(data));
       }
@@ -706,31 +759,46 @@ const inv = site.invoice;
           els.email().focus();
           return;
         }
+        const quote = isQuote();
         const data = await downloadPdf();
         const total = invoiceTotal(d.items);
-        const lines = [
-          `Dear ${d.clientName || 'customer'},`,
-          '',
-          `Please find attached invoice ${d.number} dated ${formatDateUK(d.dateISO)}.`,
-          '',
-          `Total due: ${formatGBP(total)}`,
-          '',
-          'Payment details:',
-          inv.bank.name,
-          `Sort code ${inv.bank.sortCode}`,
-          `Account number ${inv.bank.accountNumber}`,
-          '',
-          inv.terms,
-          '',
-          inv.signOff,
-          inv.signatory,
-          inv.tradingName,
-        ].join('\n');
+        const lines = quote
+          ? [
+              `Dear ${d.clientName || 'customer'},`,
+              '',
+              `Please find attached your quote ${d.number} dated ${formatDateUK(d.dateISO)}.`,
+              '',
+              `Quoted total: ${formatGBP(total)}`,
+              '',
+              'This quote is valid for 30 days. If you are happy to go ahead, just reply to this email and we will book the work in.',
+              '',
+              inv.signOff,
+              inv.signatory,
+              inv.tradingName,
+            ].join('\n')
+          : [
+              `Dear ${d.clientName || 'customer'},`,
+              '',
+              `Please find attached invoice ${d.number} dated ${formatDateUK(d.dateISO)}.`,
+              '',
+              `Total due: ${formatGBP(total)}`,
+              '',
+              'Payment details:',
+              inv.bank.name,
+              `Sort code ${inv.bank.sortCode}`,
+              `Account number ${inv.bank.accountNumber}`,
+              '',
+              inv.terms,
+              '',
+              inv.signOff,
+              inv.signatory,
+              inv.tradingName,
+            ].join('\n');
         const mailto = `mailto:${encodeURIComponent(d.clientEmail)}?subject=${encodeURIComponent(
-          `Invoice ${d.number} from ${inv.tradingName}`
+          `${quote ? 'Quote' : 'Invoice'} ${d.number} from ${inv.tradingName}`
         )}&body=${encodeURIComponent(lines)}`;
         window.location.href = mailto;
-        setNote('PDF downloaded and your email opened. Attach the PDF, then send. Saved to Records.');
+        setNote(`PDF downloaded and your email opened. Attach the PDF, then send. Saved to ${quote ? 'Quotes' : 'Records'}.`);
       }
 
       function setNote(text: string) {
@@ -759,7 +827,7 @@ const inv = site.invoice;
       }
 
       function loadDraft() {
-        const raw = localStorage.getItem(DRAFT);
+        const raw = localStorage.getItem(draftKey());
         if (!raw) return false;
         try {
           const d = JSON.parse(raw);
@@ -784,13 +852,14 @@ const inv = site.invoice;
       /** Mark a sequence as used so the next generated number moves on. */
       function markUsed(number: string) {
         const seq = invSeqFromNumber(number);
-        const stored = parseInt(localStorage.getItem(SEQ) || '0', 10) || 0;
-        if (seq > stored) localStorage.setItem(SEQ, String(seq));
+        const key = String(number).includes('-Q-') ? Q_SEQ : INV_SEQ;
+        const stored = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+        if (seq > stored) localStorage.setItem(key, String(seq));
       }
 
       function freshInvoice() {
         markUsed(els.number().value); // consume the current number
-        localStorage.removeItem(DRAFT);
+        localStorage.removeItem(draftKey());
         els.number().value = genNumber();
         els.date().value = todayISO();
         els.client().value = '';
@@ -890,6 +959,197 @@ const inv = site.invoice;
         setLocalRecords(localRecords().filter((x) => x.number !== number));
         if (cloudMode && supabase) { try { await supabase.from('invoices').delete().eq('number', number); } catch {} }
         await loadRecords();
+      }
+
+      // ---------- Quotes (saved quotes + accept -> invoice) ----------
+      // Same shape as invoice records, with a status of pending / accepted /
+      // declined and a link to the invoice number once accepted. Stored on the
+      // device and, when signed in to the cloud, mirrored to a `quotes` table
+      // (all cloud calls are wrapped so a missing table never breaks the tool).
+      let quotesCache: any[] = [];
+      function localQuotes(): any[] { try { return JSON.parse(localStorage.getItem(QUOTES) || '[]'); } catch { return []; } }
+      function setLocalQuotes(a: any[]) { localStorage.setItem(QUOTES, JSON.stringify(a)); }
+      function quoteUpsert(rec: any) {
+        const arr = localQuotes();
+        const fields = { number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, clientAddress: rec.clientAddress, email: rec.email, total: rec.total, items: rec.items, notes: rec.notes };
+        const i = arr.findIndex((r) => r.number === rec.number);
+        if (i >= 0) arr[i] = { ...arr[i], ...fields };
+        else arr.push({ ...fields, status: 'pending', acceptedDateISO: '', invoiceNumber: '' });
+        setLocalQuotes(arr);
+      }
+      function dbQuoteToApp(r: any) {
+        const bundle = r.items;
+        const lines = Array.isArray(bundle) ? bundle : bundle && bundle.lines ? bundle.lines : [];
+        const address = bundle && !Array.isArray(bundle) && bundle.address ? bundle.address : '';
+        return { number: r.number, dateISO: r.date || '', clientName: r.client_name || '', clientAddress: address, email: r.email || '', total: Number(r.total) || 0, status: r.status || 'pending', acceptedDateISO: r.accepted_date || '', invoiceNumber: r.invoice_number || '', items: lines, notes: r.notes || '' };
+      }
+      async function insertMissingQuote(rec: any) {
+        const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: packItems(rec), notes: rec.notes || null, status: rec.status || 'pending', accepted_date: rec.acceptedDateISO || null, invoice_number: rec.invoiceNumber || null };
+        await supabase!.from('quotes').insert(base);
+      }
+      async function loadQuotes() {
+        if (cloudMode && supabase) {
+          try {
+            const { data: cloud, error } = await supabase.from('quotes').select('*');
+            if (!error) {
+              const nums = new Set((cloud || []).map((r: any) => r.number));
+              const missing = localQuotes().filter((r: any) => r.number && !nums.has(r.number));
+              for (const rec of missing) { try { await insertMissingQuote(rec); } catch {} }
+              const fresh = missing.length ? (await supabase.from('quotes').select('*')).data : cloud;
+              quotesCache = (fresh || []).map(dbQuoteToApp);
+              setLocalQuotes(quotesCache);
+              renderQuotes();
+              return;
+            }
+          } catch {}
+        }
+        quotesCache = localQuotes();
+        renderQuotes();
+      }
+      async function saveQuote(d: any) {
+        const rec = { number: d.number, dateISO: d.dateISO, clientName: d.clientName, clientAddress: d.clientAddress, email: d.clientEmail, total: invoiceTotal(d.items), items: d.items, notes: d.notes };
+        quoteUpsert(rec);
+        markUsed(d.number);
+        if (cloudMode && supabase) {
+          try {
+            const base: any = { number: rec.number, date: rec.dateISO || null, client_name: rec.clientName, email: rec.email, total: rec.total, items: packItems(rec), notes: rec.notes };
+            const { data: ex } = await supabase.from('quotes').select('id').eq('number', rec.number).maybeSingle();
+            if (ex) await supabase.from('quotes').update(base).eq('id', ex.id);
+            else await supabase.from('quotes').insert({ ...base, status: 'pending', accepted_date: null, invoice_number: null });
+          } catch (e) { console.warn('Cloud quote save failed; kept on device.', e); }
+        }
+        await loadQuotes();
+      }
+      async function setQuoteStatus(number: string, status: string) {
+        const arr = localQuotes();
+        const r = arr.find((x) => x.number === number);
+        if (r) { r.status = status; if (status === 'accepted' && !r.acceptedDateISO) r.acceptedDateISO = todayISO(); setLocalQuotes(arr); }
+        if (cloudMode && supabase) { try { await supabase.from('quotes').update({ status, accepted_date: status === 'accepted' ? todayISO() : null }).eq('number', number); } catch {} }
+        await loadQuotes();
+      }
+      async function deleteQuote(number: string) {
+        if (!confirm('Delete quote ' + number + '?')) return;
+        setLocalQuotes(localQuotes().filter((x) => x.number !== number));
+        if (cloudMode && supabase) { try { await supabase.from('quotes').delete().eq('number', number); } catch {} }
+        await loadQuotes();
+      }
+      // Turn an accepted quote into an invoice, then open it so the owner can send.
+      async function acceptQuote(number: string) {
+        const q = quotesCache.find((r) => r.number === number) || localQuotes().find((r: any) => r.number === number);
+        if (!q) return;
+        if (q.invoiceNumber) {
+          if (confirm('This quote is already invoice ' + q.invoiceNumber + '. Open that invoice?')) { switchScreen('records'); openRecord(q.invoiceNumber, false); }
+          return;
+        }
+        if (!confirm('Turn quote ' + number + ' into an invoice and open it to send?')) return;
+        const invNo = makeInvoiceNumber(inv.numberPrefix, (parseInt(localStorage.getItem(INV_SEQ) || '0', 10) || 0) + 1, new Date().getFullYear());
+        const d = { number: invNo, dateISO: todayISO(), clientName: q.clientName, clientAddress: q.clientAddress, clientEmail: q.email, items: q.items, notes: q.notes };
+        await saveRecord(d);
+        const arr = localQuotes();
+        const qr = arr.find((x) => x.number === number);
+        if (qr) { qr.status = 'accepted'; qr.acceptedDateISO = todayISO(); qr.invoiceNumber = invNo; setLocalQuotes(arr); }
+        if (cloudMode && supabase) { try { await supabase.from('quotes').update({ status: 'accepted', accepted_date: todayISO(), invoice_number: invNo }).eq('number', number); } catch {} }
+        await loadQuotes();
+        openRecord(invNo, false);
+        setNote('Invoice ' + invNo + ' created from quote ' + number + '. Add the client email if needed, then press Send to client.');
+      }
+      function openQuote(number: string, duplicate: boolean) {
+        const rec = quotesCache.find((r) => r.number === number);
+        if (!rec) return;
+        docType = 'quote';
+        applyDocType();
+        els.number().value = duplicate ? genNumber() : rec.number;
+        els.date().value = duplicate ? todayISO() : rec.dateISO || todayISO();
+        els.client().value = rec.clientName || '';
+        els.address().value = rec.clientAddress || '';
+        els.email().value = rec.email || '';
+        els.notes().value = rec.notes || '';
+        els.rows().innerHTML = '';
+        const lines = rec.items && rec.items.length ? rec.items : [{}];
+        lines.forEach((it: any) => addRow({ productType: it.productType || '', description: it.description || '', unit: it.unit != null ? String(it.unit) : '', price: it.price != null ? String(it.price) : '' }));
+        saveDraft();
+        renderPreview();
+        switchScreen('builder', 'quote');
+        switchTab('edit');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      async function downloadQuotePdf(number: string) {
+        const rec = quotesCache.find((r) => r.number === number);
+        if (!rec) return;
+        const data = { number: rec.number, dateISO: rec.dateISO, clientName: rec.clientName, clientAddress: rec.clientAddress, clientEmail: rec.email, items: rec.items, notes: rec.notes, _docType: 'quote' };
+        const { doc } = await buildPdf(data);
+        doc.save(fileName(data));
+      }
+      async function sendQuote(number: string) {
+        openQuote(number, false);
+        setTimeout(() => sendToClient(), 60);
+      }
+
+      const qFilter = { q: '', status: 'all' };
+      function quotesFiltered() {
+        const query = qFilter.q.trim().toLowerCase();
+        let recs = quotesCache.slice();
+        if (qFilter.status !== 'all') recs = recs.filter((r) => (r.status || 'pending') === qFilter.status);
+        if (query) recs = recs.filter((r) => (r.clientName || '').toLowerCase().includes(query) || (r.number || '').toLowerCase().includes(query));
+        return recs.sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
+      }
+      function renderQuotes() {
+        const status = document.getElementById('q-status');
+        if (status) status.textContent = cloudMode ? 'Cloud sync on. Synced across your devices.' : (supabase ? 'On this device only. Log in with your Supabase passcode to sync.' : 'Saved on this device.');
+        const pending = quotesCache.filter((r) => (r.status || 'pending') === 'pending');
+        const accepted = quotesCache.filter((r) => r.status === 'accepted');
+        const pendingTotal = pending.reduce((s, r) => s + (r.total || 0), 0);
+        const acceptedTotal = accepted.reduce((s, r) => s + (r.total || 0), 0);
+        const summary = document.getElementById('q-summary');
+        if (summary) {
+          const card = (label: string, value: string, color: string) =>
+            `<div class="rounded-2xl bg-white p-5 shadow-card"><div class="text-sm font-semibold text-[#5b6b7f]">${label}</div><div class="mt-1 text-3xl font-extrabold" style="color:${color}">${value}</div></div>`;
+          summary.innerHTML =
+            card('Pending quotes', String(pending.length), '#152437') +
+            card('Pending value', formatGBP(pendingTotal), '#1863dc') +
+            card('Accepted value', formatGBP(acceptedTotal), '#16a34a');
+        }
+        renderQuotesList();
+      }
+      function renderQuotesList() {
+        const listEl = document.getElementById('q-list');
+        if (!listEl) return;
+        const recs = quotesFiltered();
+        if (!quotesCache.length) { listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No quotes yet. Create a quote and it will appear here.</p>'; return; }
+        if (!recs.length) { listEl.innerHTML = '<p class="text-sm text-[#5b6b7f]">No quotes match this search.</p>'; return; }
+        const badgeFor = (s: string) => s === 'accepted'
+          ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Accepted</span>'
+          : s === 'declined'
+          ? '<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Declined</span>'
+          : '<span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;">Pending</span>';
+        const rows = recs.map((r) => {
+          const s = r.status || 'pending';
+          const actions = s === 'accepted'
+            ? `<button data-qinv="${r.number}" style="color:#16a34a;font-weight:700;">Invoice ${escapeHtml(r.invoiceNumber || '')}</button>`
+            : `<button data-qaccept="${r.number}" style="color:#16a34a;font-weight:700;">Accept</button> &nbsp; <button data-qdecline="${r.number}" style="color:#5b6b7f;font-weight:600;">Decline</button>`;
+          return `<tr style="border-bottom:1px solid #f0f3f7;">
+            <td style="padding:9px 10px;white-space:nowrap;">${formatDateUK(r.dateISO)}</td>
+            <td style="padding:9px 10px;font-weight:700;white-space:nowrap;">${escapeHtml(r.number)}</td>
+            <td style="padding:9px 10px;">${escapeHtml(r.clientName || '')}</td>
+            <td style="padding:9px 10px;text-align:right;white-space:nowrap;font-weight:700;">${formatGBP(r.total)}</td>
+            <td style="padding:9px 10px;text-align:center;">${badgeFor(s)}</td>
+            <td style="padding:9px 10px;text-align:right;white-space:nowrap;">
+              <button data-qpdf="${r.number}" style="color:#152437;font-weight:700;">PDF</button> &nbsp;
+              <button data-qopen="${r.number}" style="color:#1863dc;font-weight:700;">Open</button> &nbsp;
+              <button data-qsend="${r.number}" style="color:#1863dc;font-weight:600;">Send</button> &nbsp;
+              ${actions} &nbsp;
+              <button data-qdel="${r.number}" style="color:#e11d2a;font-weight:600;">Delete</button>
+            </td>
+          </tr>`;
+        }).join('');
+        listEl.innerHTML = recTable(rows, ['Date', 'Quote', 'Client', 'Amount', 'Status', '']);
+        listEl.querySelectorAll('[data-qaccept]').forEach((b) => b.addEventListener('click', () => acceptQuote((b as HTMLElement).dataset.qaccept!)));
+        listEl.querySelectorAll('[data-qdecline]').forEach((b) => b.addEventListener('click', () => setQuoteStatus((b as HTMLElement).dataset.qdecline!, 'declined')));
+        listEl.querySelectorAll('[data-qdel]').forEach((b) => b.addEventListener('click', () => deleteQuote((b as HTMLElement).dataset.qdel!)));
+        listEl.querySelectorAll('[data-qopen]').forEach((b) => b.addEventListener('click', () => openQuote((b as HTMLElement).dataset.qopen!, false)));
+        listEl.querySelectorAll('[data-qpdf]').forEach((b) => b.addEventListener('click', () => downloadQuotePdf((b as HTMLElement).dataset.qpdf!)));
+        listEl.querySelectorAll('[data-qsend]').forEach((b) => b.addEventListener('click', () => sendQuote((b as HTMLElement).dataset.qsend!)));
+        listEl.querySelectorAll('[data-qinv]').forEach((b) => b.addEventListener('click', () => { switchScreen('records'); openRecord((b as HTMLElement).dataset.qinv!, false); }));
       }
 
       async function pushLocalToCloud() {
@@ -1104,6 +1364,8 @@ const inv = site.invoice;
       function openRecord(number: string, duplicate: boolean) {
         const rec = recordsCache.find((r) => r.number === number);
         if (!rec) return;
+        docType = 'invoice';
+        applyDocType();
         els.number().value = duplicate ? genNumber() : rec.number;
         els.date().value = duplicate ? todayISO() : rec.dateISO || todayISO();
         els.client().value = rec.clientName || '';
@@ -1120,17 +1382,41 @@ const inv = site.invoice;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
+      // ---------- Doc type (invoice / quote) ----------
+      function applyDocType() {
+        document.querySelectorAll('.doc-title-label').forEach((e) => (e.textContent = docWord(true)));
+        document.querySelectorAll('.doc-edit-label').forEach((e) => (e.textContent = 'Edit ' + docWord(false)));
+        document.querySelectorAll('[data-act="new"]').forEach((e) => (e.textContent = 'Start new ' + docWord(false)));
+        updateNavSelection('builder');
+      }
+      function setDocType(t: 'invoice' | 'quote') {
+        if (t === docType) return;
+        saveDraft(); // persist the current type's draft before switching
+        docType = t;
+        applyDocType();
+        if (!loadDraft()) freshInvoice();
+        renderPreview();
+      }
+      function updateNavSelection(name: string) {
+        document.querySelectorAll('.screenbtn').forEach((b) => {
+          const el = b as HTMLElement;
+          const match = el.dataset.screen === name && (name !== 'builder' || el.dataset.doc === docType);
+          el.setAttribute('aria-selected', String(match));
+        });
+      }
+
       // ---------- Screen + tab switching ----------
-      function switchScreen(name: string) {
+      function switchScreen(name: string, doc?: string) {
+        if (name === 'builder' && doc && doc !== docType) setDocType(doc as 'invoice' | 'quote');
         const builder = document.getElementById('builder-screen')!;
         const records = document.getElementById('records-screen')!;
-        const isRec = name === 'records';
-        builder.classList.toggle('hidden', isRec);
-        records.classList.toggle('hidden', !isRec);
-        document.querySelectorAll('.screenbtn').forEach((b) =>
-          b.setAttribute('aria-selected', String((b as HTMLElement).dataset.screen === name))
-        );
-        if (isRec) renderRecords();
+        const quotes = document.getElementById('quotes-screen')!;
+        builder.classList.toggle('hidden', name !== 'builder');
+        records.classList.toggle('hidden', name !== 'records');
+        quotes.classList.toggle('hidden', name !== 'quotes');
+        updateNavSelection(name);
+        if (name === 'records') renderRecords();
+        else if (name === 'quotes') renderQuotes();
         else fitPreview();
       }
       function switchTab(name: string) {
@@ -1179,11 +1465,16 @@ const inv = site.invoice;
         document.querySelectorAll('[data-act="print"]').forEach((b) => b.addEventListener('click', () => window.print()));
         document.querySelectorAll('[data-act="send"]').forEach((b) => b.addEventListener('click', () => sendToClient()));
         document.querySelectorAll('[data-act="new"]').forEach((b) =>
-          b.addEventListener('click', () => { if (confirm('Start a new blank invoice? The current draft will be cleared.')) freshInvoice(); })
+          b.addEventListener('click', () => { if (confirm('Start a new blank ' + docWord(false) + '? The current draft will be cleared.')) freshInvoice(); })
         );
 
         document.querySelectorAll('.tabbtn').forEach((b) => b.addEventListener('click', () => switchTab((b as HTMLElement).dataset.tab!)));
-        document.querySelectorAll('.screenbtn').forEach((b) => b.addEventListener('click', () => switchScreen((b as HTMLElement).dataset.screen!)));
+        // Every element with data-screen switches screen (nav buttons + the
+        // "New quote" shortcut); data-doc selects invoice vs quote in the builder.
+        document.querySelectorAll('[data-screen]').forEach((b) => b.addEventListener('click', () => switchScreen((b as HTMLElement).dataset.screen!, (b as HTMLElement).dataset.doc)));
+
+        document.getElementById('q-search')!.addEventListener('input', (e) => { qFilter.q = (e.target as HTMLInputElement).value; renderQuotesList(); });
+        document.getElementById('q-filter-status')!.addEventListener('change', (e) => { qFilter.status = (e.target as HTMLSelectElement).value; renderQuotesList(); });
 
         document.getElementById('rec-export')!.addEventListener('click', exportRecords);
         document.getElementById('rec-import')!.addEventListener('click', () => document.getElementById('rec-file')!.click());
@@ -1208,8 +1499,9 @@ const inv = site.invoice;
         }
 
         if (!loadDraft()) freshInvoice();
+        applyDocType();
         switchTab('edit');
-        switchScreen('builder');
+        switchScreen('builder', 'invoice');
         renderPreview();
       }
 
