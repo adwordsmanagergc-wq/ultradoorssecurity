@@ -93,7 +93,7 @@ export const site = {
     supabase: {
       url: 'https://rrivtgwhjebwmvxwbwof.supabase.co',
       anonKey: 'sb_publishable_ml23dP8lWaRaS7nLG6hahw_j4Nm9WUv',
-      ownerEmail: 'info@ultradoorssecurity.co.uk',
+      ownerEmail: 'ukultradoors@gmail.com',
     },
   },
 } as const;
