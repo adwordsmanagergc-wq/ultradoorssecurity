@@ -5,14 +5,15 @@
  * actual subject. Adjust any `category` if you'd like a photo to appear under
  * a different filter, the gallery + lightbox update automatically.
  *
- * Categories: 'Security Doors' | 'Roller Shutters' | 'Industrial Doors'
- *           | 'Shop Fronts & Glazing' | 'Security Gates'
+ * Categories: 'Security Doors' | 'Roller Shutters' | 'Garage Doors'
+ *           | 'Industrial Doors' | 'Shop Fronts & Glazing' | 'Security Gates'
  */
 
 export const CATEGORIES = [
   'All',
   'Security Doors',
   'Roller Shutters',
+  'Garage Doors',
   'Industrial Doors',
   'Shop Fronts & Glazing',
   'Security Gates',
@@ -33,27 +34,33 @@ export const projects: Project[] = [
   { src: '/images/composit-door2.jpg', alt: 'Sage green composite front door fitted to a home', category: 'Security Doors' },
 
   // ── Roller Shutters ────────────────────────────────────────────────────
-  { src: '/images/Roller-shutter-image.jpg', alt: 'White electric roller shutter fitted to a domestic garage', category: 'Roller Shutters' },
   { src: '/images/ultradoors-2-1.jpg', alt: 'Roller shutter repair cordoned off with safety barrier tape', category: 'Roller Shutters' },
   { src: '/images/ultradoors-3.jpg', alt: 'White window roller shutter partially open', category: 'Roller Shutters' },
   { src: '/images/ultradoors-4.jpg', alt: 'Row of security roller shutters seen in perspective', category: 'Roller Shutters' },
   { src: '/images/ultradoors-8.jpg', alt: 'Beige insulated roller shutter on a commercial unit', category: 'Roller Shutters' },
-  { src: '/images/ultradoors-9.jpg', alt: 'White roller shutter garage door', category: 'Roller Shutters' },
   { src: '/images/ultradoors-14.jpg', alt: 'Grey insulated roller shutter door', category: 'Roller Shutters' },
   { src: '/images/ultradoors-15.jpg', alt: 'Anthracite window roller shutter on a rendered wall', category: 'Roller Shutters' },
   { src: '/images/ultradoors-17.jpg', alt: 'White roller shutter with manual override', category: 'Roller Shutters' },
   { src: '/images/ultradoors-19-1.jpg', alt: 'Grey roller shutters on a commercial frontage', category: 'Roller Shutters' },
   { src: '/images/ultradoors-20.jpg', alt: 'White window roller shutter for security and insulation', category: 'Roller Shutters' },
   { src: '/images/ultradoors-21.jpg', alt: 'Red roller shutter door on a commercial unit', category: 'Roller Shutters' },
-  { src: '/images/ultradoors-22.jpg', alt: 'White insulated roller shutter on a garage', category: 'Roller Shutters' },
   { src: '/images/ultradoors-24.jpg', alt: 'Domestic window roller shutter, part lowered', category: 'Roller Shutters' },
-  { src: '/images/ultradoors-25.jpg', alt: 'Grey roller shutter garage door', category: 'Roller Shutters' },
   { src: '/images/ultradoors-28.jpg', alt: 'Fitter cleaning a woodgrain-effect roller shutter', category: 'Roller Shutters' },
   { src: '/images/ultradoors-29.jpg', alt: 'Dark roller shutter protecting a shop front', category: 'Roller Shutters' },
-  { src: '/images/ultradoors-32.jpg', alt: 'Brown roller shutter on a brick garage', category: 'Roller Shutters' },
   { src: '/images/ultradoors-36.jpg', alt: 'Beige roller shutter on a commercial building', category: 'Roller Shutters' },
   { src: '/images/ultradoors-37-2.jpg', alt: 'Security shutters inside a shopping centre unit', category: 'Roller Shutters' },
-  { src: '/images/ultradoors-39.jpg', alt: 'Black roller shutter on a brick garage', category: 'Roller Shutters' },
+
+  // ── Garage Doors ───────────────────────────────────────────────────────
+  { src: '/images/gallery/garage-black-after.jpg', alt: 'New black insulated roller garage door fitted to a home', category: 'Garage Doors' },
+  { src: '/images/gallery/roller-shutter-white-garage.jpg', alt: 'White insulated roller garage door on a domestic garage', category: 'Garage Doors' },
+  { src: '/images/ultradoors-34.jpg', alt: 'Anthracite sectional garage door on a smart detached home', category: 'Garage Doors' },
+  { src: '/images/ultradoors-41.jpg', alt: 'Anthracite sectional garage door on a brick garage', category: 'Garage Doors' },
+  { src: '/images/ultradoors-9.jpg', alt: 'White roller garage door on a rendered home', category: 'Garage Doors' },
+  { src: '/images/ultradoors-32.jpg', alt: 'Grey roller garage door on a brick garage with side door', category: 'Garage Doors' },
+  { src: '/images/ultradoors-39.jpg', alt: 'Black roller garage door on a brick garage', category: 'Garage Doors' },
+  { src: '/images/ultradoors-25.jpg', alt: 'Galvanised roller garage door on a domestic garage', category: 'Garage Doors' },
+  { src: '/images/gallery/roller-shutters-garage-block.jpg', alt: 'Galvanised roller garage doors on a block of garages', category: 'Garage Doors' },
+  { src: '/images/Roller-shutter-image.jpg', alt: 'White electric roller garage door fitted to a domestic garage', category: 'Garage Doors' },
 
   // ── Industrial Doors ───────────────────────────────────────────────────
   { src: '/images/commercial-thumb.jpg', alt: 'Dark commercial roller shutter door', category: 'Industrial Doors' },
@@ -66,9 +73,7 @@ export const projects: Project[] = [
   { src: '/images/ultradoors-16.jpg', alt: 'Rows of insulated shutters in an industrial interior', category: 'Industrial Doors' },
   { src: '/images/ultradoors-23.jpg', alt: 'Blue shutter doors on self-storage units', category: 'Industrial Doors' },
   { src: '/images/ultradoors-27.jpg', alt: 'Warehouse loading bay fitted with industrial doors', category: 'Industrial Doors' },
-  { src: '/images/ultradoors-34.jpg', alt: 'Anthracite double sectional garage door', category: 'Industrial Doors' },
   { src: '/images/ultradoors-38.jpg', alt: 'Fitters installing a white sectional industrial door', category: 'Industrial Doors' },
-  { src: '/images/ultradoors-41.jpg', alt: 'Grey sectional garage door on a brick garage', category: 'Industrial Doors' },
 
   // ── Shop Fronts & Glazing (incl. windows & conservatories) ─────────────
   { src: '/images/windows-doors-thumb.jpg', alt: 'Home with new white uPVC windows and French doors', category: 'Shop Fronts & Glazing' },

@@ -40,9 +40,9 @@ export const services: Service[] = [
     title: 'Garage Doors',
     description:
       'Roller, sectional and up-and-over garage doors, supplied, fitted, automated and repaired.',
-    image: '/images/gallery/roller-shutter-white-garage.jpg',
-    alt: 'White insulated roller garage door fitted to a domestic garage',
-    category: 'Roller Shutters',
+    image: '/images/gallery/garage-black-after.jpg',
+    alt: 'New black insulated roller garage door fitted to a home',
+    category: 'Garage Doors',
     href: '/garage-doors/',
   },
   {
