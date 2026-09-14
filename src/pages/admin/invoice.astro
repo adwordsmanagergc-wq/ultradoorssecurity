@@ -776,8 +776,13 @@ const inv = site.invoice;
           return;
         }
         const quote = isQuote();
-        const data = await downloadPdf();
+        // Build the PDF once and save the record (regardless of how it is sent).
+        const { doc, data } = await buildPdf();
+        data._docType = docType;
+        if (quote) await saveQuote(data); else await saveRecord(data);
+
         const total = invoiceTotal(d.items);
+        const subject = `${quote ? 'Quote' : 'Invoice'} ${d.number} from ${inv.tradingName}`;
         const lines = quote
           ? [
               `Dear ${d.clientName || 'customer'},`,
@@ -810,11 +815,28 @@ const inv = site.invoice;
               inv.signatory,
               inv.tradingName,
             ].join('\n');
-        const mailto = `mailto:${encodeURIComponent(d.clientEmail)}?subject=${encodeURIComponent(
-          `${quote ? 'Quote' : 'Invoice'} ${d.number} from ${inv.tradingName}`
-        )}&body=${encodeURIComponent(lines)}`;
+        const name = fileName(data);
+
+        // Best path (phones/tablets): the native share sheet attaches the PDF
+        // directly into Gmail, WhatsApp, etc., with the message pre-filled.
+        try {
+          const file = new File([doc.output('blob')], name, { type: 'application/pdf' });
+          if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
+            await (navigator as any).share({ files: [file], title: subject, text: lines });
+            setNote('Ready to send with the PDF attached. Pick Gmail (or WhatsApp) and choose the client.');
+            return;
+          }
+        } catch (e: any) {
+          if (e && e.name === 'AbortError') { setNote('Send cancelled. Nothing was sent, the ' + (quote ? 'quote' : 'invoice') + ' is saved.'); return; }
+          // Any other error: fall through to the download + email fallback.
+        }
+
+        // Fallback (desktop email clients that cannot attach programmatically):
+        // download the PDF, open the email, attach it manually.
+        doc.save(name);
+        const mailto = `mailto:${encodeURIComponent(d.clientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines)}`;
         window.location.href = mailto;
-        setNote(`PDF downloaded and your email opened. Attach the PDF, then send. Saved to ${quote ? 'Quotes' : 'Records'}.`);
+        setNote(`PDF downloaded (${name}) and your email opened. Attach that PDF, then send. Saved to ${quote ? 'Quotes' : 'Records'}.`);
       }
 
       function setNote(text: string) {
