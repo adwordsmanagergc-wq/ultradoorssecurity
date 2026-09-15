@@ -546,13 +546,12 @@ const inv = site.invoice;
 
           <div style="margin-top:34px;padding-top:18px;border-top:1px solid #e7edf4;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;">
             <div style="font-size:12.5px;color:#33445a;line-height:1.7;">
-              <div style="font-weight:800;color:#152437;">Bank details</div>
-              ${escapeHtml(inv.bank.name)}<br>
-              Sort code ${escapeHtml(inv.bank.sortCode)}<br>
-              Account number ${escapeHtml(inv.bank.accountNumber)}
+              ${isQuote()
+                ? `<div style="font-weight:800;color:#152437;">This is a quotation</div>Valid for 30 days from the date above.`
+                : `<div style="font-weight:800;color:#152437;">Bank details</div>${escapeHtml(inv.bank.name)}<br>Sort code ${escapeHtml(inv.bank.sortCode)}<br>Account number ${escapeHtml(inv.bank.accountNumber)}`}
             </div>
             <div style="font-size:12.5px;color:#33445a;line-height:1.7;text-align:right;">
-              <div>${escapeHtml(inv.terms)}</div>
+              ${isQuote() ? '' : `<div>${escapeHtml(inv.terms)}</div>`}
               <div style="margin-top:10px;">${escapeHtml(inv.signOff)}</div>
               <div style="font-weight:800;color:#152437;">${escapeHtml(inv.signatory)}</div>
             </div>
@@ -717,7 +716,9 @@ const inv = site.invoice;
           fy += notes.length * 4.5 + 6;
         }
 
-        // Bank + sign off near the bottom
+        // Footer near the bottom. Invoices carry bank details + payment terms;
+        // quotes omit these (they appear on the invoice once the quote is
+        // accepted) and show a short validity note instead.
         const bottomY = Math.max(fy, 250);
         doc.setDrawColor(231, 237, 244);
         doc.setLineWidth(0.4);
@@ -725,15 +726,25 @@ const inv = site.invoice;
         doc.setTextColor(...navy);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text('Bank details', m, bottomY);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9.5);
-        doc.setTextColor(51, 68, 90);
-        doc.text(inv.bank.name, m, bottomY + 5.5);
-        doc.text(`Sort code ${inv.bank.sortCode}`, m, bottomY + 10.5);
-        doc.text(`Account number ${inv.bank.accountNumber}`, m, bottomY + 15.5);
+        if (type === 'quote') {
+          doc.text('This is a quotation', m, bottomY);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 68, 90);
+          doc.text('Valid for 30 days from the date above.', m, bottomY + 5.5);
+        } else {
+          doc.text('Bank details', m, bottomY);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 68, 90);
+          doc.text(inv.bank.name, m, bottomY + 5.5);
+          doc.text(`Sort code ${inv.bank.sortCode}`, m, bottomY + 10.5);
+          doc.text(`Account number ${inv.bank.accountNumber}`, m, bottomY + 15.5);
+          doc.text(inv.terms, W - m, bottomY, { align: 'right' });
+        }
 
-        doc.text(inv.terms, W - m, bottomY, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(51, 68, 90);
         doc.text(inv.signOff, W - m, bottomY + 8, { align: 'right' });
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...navy);
